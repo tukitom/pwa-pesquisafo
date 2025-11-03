@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mapa FO Flores</title>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css">
+<title>Mapa Locais</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <link rel="stylesheet" href="styles.css">
 <style>
   #map {
@@ -49,95 +49,73 @@
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Plugin que adiciona suporte a rotação -->
+<script src="https://unpkg.com/leaflet-map-rotate@0.1.1/dist/leaflet-map-rotate.min.js"></script>
+
 <script>
-  // === Mapa base nítido (ruas)
-  const map = new maplibregl.Map({
-    container: 'map',
-    style: 'https://api.maptiler.com/maps/streets/style.json?key=Cj5w3ovW3aR8RGpiAoug',
-    center: [-31.13, 39.454],
-    zoom: 14,
-    pitch: 0,
-    dragRotate: true,
-    pitchWithRotate: false,
-    touchZoomRotate: true,
-    attributionControl: true
+  // Inicialização do mapa com rotação habilitada
+  const map = L.map('map', {
+    center: [39.454, -31.13],
+    zoom: 13,
+    rotation: 0,          // rotação inicial
+    touchRotate: true,     // permite girar com dois dedos
+    dragging: true,
+    scrollWheelZoom: true
   });
 
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }));
-
-  // Botão norte
-  const btnReset = document.createElement('button');
-  btnReset.textContent = '🔄 Norte para cima';
-  btnReset.style.position = 'absolute';
-  btnReset.style.top = '10px';
-  btnReset.style.right = '10px';
-  btnReset.style.zIndex = '10';
-  btnReset.style.padding = '6px 10px';
-  btnReset.style.background = '#2B2B2B';
-  btnReset.style.color = 'white';
-  btnReset.style.border = 'none';
-  btnReset.style.borderRadius = '6px';
-  btnReset.onclick = () => map.easeTo({ bearing: 0, pitch: 0 });
-  document.body.appendChild(btnReset);
+  // Camada base (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
   let todosOsMarkers = [];
 
-  // === Carregar Locais etiquetados.json ===
+  // Ícones
+  const blueIcon = new L.Icon({
+    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+    iconSize: [32, 32]
+  });
+  const greenIcon = new L.Icon({
+    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+    iconSize: [32, 32]
+  });
+
+  // Carregar ficheiro GeoJSON
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
       data.features.forEach(f => {
-        const coords = f.geometry?.coordinates;
-        if (!coords || coords.length < 2) return;
-
-        const [lng, lat] = coords;
-        const nome = String(f.properties?.name || "Sem nome").trim();
+        const [lng, lat] = f.geometry.coordinates;
+        const nome = String(f.properties.name || "Sem nome").trim();
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
-        const color = tipo === "jfo" ? "#00FF00" : "#007BFF";
+        const icon = tipo === "jfo" ? greenIcon : blueIcon;
 
-        const el = document.createElement("div");
-        el.style.backgroundColor = color;
-        el.style.width = "16px";
-        el.style.height = "16px";
-        el.style.borderRadius = "50%";
-        el.style.border = "2px solid white";
-        el.style.cursor = "pointer";
-
-        // 🔧 Popup só com o nome
-        const popup = new maplibregl.Popup({ offset: 25 })
-          .setHTML(`<b style="font-family:Arial,sans-serif;font-size:14px;">${nome}</b>`);
-
-        const marker = new maplibregl.Marker(el)
-          .setLngLat([lng, lat])
-          .setPopup(popup)
-          .addTo(map);
+        const marker = L.marker([lat, lng], { icon })
+          .bindPopup(`<b>${nome}</b>`);
 
         todosOsMarkers.push({ nome, tipo, marker });
+        marker.addTo(map);
       });
-    })
-    .catch(err => {
-      console.error("Erro ao carregar Locais etiquetados.json:", err);
-      alert("Erro ao carregar o ficheiro de locais.");
     });
 
-  // === Pesquisa manual ===
+  // Pesquisa manual
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
     const encontrado = todosOsMarkers.find(m => m.nome.toLowerCase().includes(termo));
     if (!encontrado) return alert("Local não encontrado!");
-    const pos = encontrado.marker.getLngLat();
-    map.flyTo({ center: pos, zoom: 17, speed: 0.8 });
-    encontrado.marker.togglePopup();
+    map.flyTo(encontrado.marker.getLatLng(), 17);
+    encontrado.marker.openPopup();
   });
 
-  // === Filtro PDO / JFO ===
+  // Filtro PDO / JFO
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
-      if (filtro === "todos" || filtro === tipo) marker.addTo(map);
-      else marker.remove();
+      if (filtro === "todos" || filtro === tipo) map.addLayer(marker);
+      else map.removeLayer(marker);
     });
   });
 </script>
