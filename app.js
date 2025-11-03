@@ -78,7 +78,7 @@ function updatePortos() {
     spinnerPorto.innerHTML = [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
 }
 
-btnPesquisar.addEventListener("click", ()=>{
+btnPesquisar.addEventListener("click", ()=> {
     if(!csvData.length){ alert("Carrega primeiro um ficheiro CSV."); return; }
     const sro=spinnerSro.value, pdo=spinnerPdo.value, porto=spinnerPorto.value;
     if(!pdo||!porto){ alert("Seleciona PDO e Porto."); return; }
