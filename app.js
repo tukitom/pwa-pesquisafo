@@ -65,7 +65,12 @@ function updatePdos() {
     const selectedSro = spinnerSro.value;
     const pdos = selectedSro==="FastFiber" ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
                                           : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
-    const pdosUnicos = [...new Set(pdos)].sort((a,b)=>parseInt(a)-parseInt(b)); // Correção para ordem numérica
+    // Ordenação numérica robusta mesmo com letras
+    const pdosUnicos = [...new Set(pdos)].sort((a,b) => {
+        const numA = parseInt(a.replace(/\D/g,'')) || 0;
+        const numB = parseInt(b.replace(/\D/g,'')) || 0;
+        return numA - numB;
+    });
     spinnerPdo.innerHTML = pdosUnicos.map(p=>`<option>${p}</option>`).join("");
     updatePortos();
 }
