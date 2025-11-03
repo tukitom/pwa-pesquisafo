@@ -65,7 +65,7 @@ function updatePdos() {
     const selectedSro = spinnerSro.value;
     const pdos = selectedSro==="FastFiber" ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
                                           : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
-    const pdosUnicos = [...new Set(pdos)].sort();
+    const pdosUnicos = [...new Set(pdos)].sort((a,b)=>parseInt(a)-parseInt(b)); // Correção para ordem numérica
     spinnerPdo.innerHTML = pdosUnicos.map(p=>`<option>${p}</option>`).join("");
     updatePortos();
 }
