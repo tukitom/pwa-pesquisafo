@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mapa Interativo FO Flores</title>
+<title>Mapa FO Flores</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -51,24 +51,24 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa com vista satélite e rotação 3D
+  // Inicializar o mapa com vista aérea (sem inclinação, mas com rotação livre)
   const map = new maplibregl.Map({
     container: 'map',
     style: 'https://api.maptiler.com/maps/hybrid/style.json?key=Cj5w3ovW3aR8RGpiAoug',
     center: [-31.13, 39.454],
-    zoom: 13,
-    pitch: 60, // Inclinação do mapa
-    bearing: 0, // Rotação inicial
+    zoom: 14,
+    pitch: 0, // sem inclinação
+    dragRotate: true, // ✅ permite rotação livre com dois dedos
+    pitchWithRotate: false, // ❌ desativa inclinação 3D
     attributionControl: true
   });
 
-  // Controles de navegação (zoom, rotação)
-  map.addControl(new maplibregl.NavigationControl());
+  // Controlo de zoom e rotação (no canto superior direito)
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }));
 
-  // Lista global de marcadores
   let todosOsMarkers = [];
 
-  // Carregar locais do ficheiro JSON
+  // Carregar ficheiro JSON com locais
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -79,17 +79,18 @@
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
         const color = tipo === "jfo" ? "lime" : "dodgerblue";
 
-        // Cria marcador colorido
+        // Cria marcador colorido circular
         const el = document.createElement('div');
         el.style.backgroundColor = color;
         el.style.width = '16px';
         el.style.height = '16px';
         el.style.borderRadius = '50%';
         el.style.border = '2px solid white';
+        el.style.cursor = 'pointer';
 
         const marker = new maplibregl.Marker(el)
           .setLngLat([lng, lat])
-          .setPopup(new maplibregl.Popup().setHTML(`<b>${nome}</b><br>${address}`))
+          .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<b>${nome}</b><br>${address}`))
           .addTo(map);
 
         todosOsMarkers.push({ nome, tipo, marker });
@@ -104,10 +105,10 @@
     if (!encontrado) return alert("Local não encontrado!");
     const pos = encontrado.marker.getLngLat();
     map.flyTo({ center: pos, zoom: 17, speed: 0.8 });
-    encontrado.marker.togglePopup();
+    encontrado.marker.getPopup().addTo(map);
   });
 
-  // 🎚️ Filtro de tipo
+  // 🎚️ Filtro (PDO / JFO)
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
