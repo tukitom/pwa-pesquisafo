@@ -51,53 +51,65 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa com vista aérea (sem inclinação, mas com rotação livre)
+  // === Configuração do mapa (satélite HD e rotação livre) ===
   const map = new maplibregl.Map({
     container: 'map',
-    style: 'https://api.maptiler.com/maps/hybrid/style.json?key=Cj5w3ovW3aR8RGpiAoug',
+    style: 'https://api.maptiler.com/maps/satellite-hybrid/style.json?key=Cj5w3ovW3aR8RGpiAoug', // 🛰️ Satélite HD com labels
     center: [-31.13, 39.454],
     zoom: 14,
-    pitch: 0, // sem inclinação
-    dragRotate: true, // ✅ permite rotação livre com dois dedos
-    pitchWithRotate: false, // ❌ desativa inclinação 3D
+    pitch: 0,                 // vista aérea pura
+    dragRotate: true,         // rotação com dois dedos
+    pitchWithRotate: false,   // sem inclinar
     attributionControl: true
   });
 
-  // Controlo de zoom e rotação (no canto superior direito)
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }));
 
   let todosOsMarkers = [];
 
-  // Carregar ficheiro JSON com locais
+  // === Carregar e processar o JSON ===
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
       data.features.forEach(f => {
         const [lng, lat] = f.geometry.coordinates;
-        const nome = f.properties.name;
-        const address = f.properties.address || "";
+        const nomeRaw = f.properties.name || "";
+        const nome = nomeRaw.trim(); // remove espaços invisíveis
+        const address = (f.properties.address || "").trim();
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
-        const color = tipo === "jfo" ? "lime" : "dodgerblue";
+        const color = tipo === "jfo" ? "#00FF00" : "#0080FF";
 
-        // Cria marcador colorido circular
-        const el = document.createElement('div');
+        // Cria marcador circular colorido
+        const el = document.createElement("div");
         el.style.backgroundColor = color;
-        el.style.width = '16px';
-        el.style.height = '16px';
-        el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-        el.style.cursor = 'pointer';
+        el.style.width = "18px";
+        el.style.height = "18px";
+        el.style.borderRadius = "50%";
+        el.style.border = "2px solid #fff";
+        el.style.cursor = "pointer";
+        el.title = nome; // mostra o nome no hover
+
+        const popupContent = `
+          <div style="font-family:sans-serif; font-size:14px;">
+            <b>${nome}</b><br>
+            ${address || "<i>Sem morada</i>"}
+          </div>
+        `;
 
         const marker = new maplibregl.Marker(el)
           .setLngLat([lng, lat])
-          .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<b>${nome}</b><br>${address}`))
+          .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(popupContent))
           .addTo(map);
 
         todosOsMarkers.push({ nome, tipo, marker });
       });
+    })
+    .catch(err => {
+      console.error("Erro ao carregar JSON:", err);
+      alert("Erro ao carregar Locais etiquetados.json");
     });
 
-  // 🔍 Pesquisa manual
+  // === Pesquisa manual ===
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
@@ -108,7 +120,7 @@
     encontrado.marker.getPopup().addTo(map);
   });
 
-  // 🎚️ Filtro (PDO / JFO)
+  // === Filtro PDO/JFO ===
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
