@@ -1,0 +1,881 @@
+{
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1275053,
+          39.4537522
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO9993 dentro das finanças "
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.129068399999998,
+          39.4557408
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1071"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1397449,
+          39.4476216
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1032"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.144981599999998,
+          39.468302
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1124"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1264154,
+          39.4542414
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1066"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1355127,
+          39.461287999999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO 1105"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.138236499999998,
+          39.462450499999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1131"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1348147,
+          39.4475724
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1040"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1411524,
+          39.4691605
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1125"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.128556099999997,
+          39.4532145
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1079"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.132674599999998,
+          39.4539124
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1058"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1256788,
+          39.4545775
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1065"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.139827699999998,
+          39.4461596
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1037"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.171629999999997,
+          39.3775718
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1026"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.129023699999998,
+          39.452245999999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "address": "Santa Cruz das Flores, Portugal",
+        "name": "PDO1097"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1275794,
+          39.4548063
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1069"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.127111099999997,
+          39.4522814
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1063"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1277182,
+          39.458295899999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1054"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1403276,
+          39.461592599999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1135"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1299565,
+          39.458989599999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1052 e PDO1112"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1429725,
+          39.445449599999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "address": "Rua de Santo Espírito, Ribeira Dos Barqueiros, Portugal",
+        "name": "PDO1031"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.140081499999997,
+          39.4453976
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1036"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1276586,
+          39.453621399999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1068"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.128487699999997,
+          39.4525939
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1078"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1333237,
+          39.457844699999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1057"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1711989,
+          39.3812505
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1029"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1742198,
+          39.3788386
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "address": "ER1-2, Lajes das Flores, Portugal",
+        "name": "PDO1027"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1633514,
+          39.392855
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1002"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1275664,
+          39.4606212
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1050"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.140589199999997,
+          39.4462663
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1086"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.126641,
+          39.4535202
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1067 mais um de fachada "
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1287117,
+          39.4541446
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1070"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1304846,
+          39.4624005
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1046"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1287167,
+          39.4602448
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1049"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1287509,
+          39.4592549
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1051"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1282641,
+          39.4520629
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1114"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1389104,
+          39.4618101
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1132"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1272053,
+          39.4518633
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1062"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1295318,
+          39.4524791
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "address": "Santa Cruz das Flores, Portugal",
+        "name": "PDO1077"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.129883799999998,
+          39.4578892
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1080"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1320949,
+          39.4487722
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1041"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1267526,
+          39.4518576
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1061"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.126345299999997,
+          39.4542137
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1182"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1286232,
+          39.4582814
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1083"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.141170499999998,
+          39.4477039
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1033"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.128001899999997,
+          39.451961499999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1044"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1338223,
+          39.4586849
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1056"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1373319,
+          39.4617632
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1133"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1334977,
+          39.4552705
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1059"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1357793,
+          39.447418
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "address": "ER1-2, Ribeira Dos Barqueiros, Portugal",
+        "name": "PDO1039"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1273397,
+          39.4532476
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1106"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1300189,
+          39.4623607
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1045"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.151289199999997,
+          39.465274699999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1117"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.135037299999997,
+          39.4605956
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1069"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.139909199999998,
+          39.4469764
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1034"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.132963999999998,
+          39.456931399999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1060"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.129106999999998,
+          39.4582097
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1055"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1301916,
+          39.458402199999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1053"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1373501,
+          39.463074
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1134"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.125906099999998,
+          39.4531868
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1064"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1289283,
+          39.4606742
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1048"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1254404,
+          39.4540092
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1108"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1642573,
+          39.3942743
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1001"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1304068,
+          39.4604053
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1047"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1358681,
+          39.4617314
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1081"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.140864099999998,
+          39.445006899999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1035"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1293202,
+          39.456135599999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1085"
+      },
+      "type": "Feature"
+    }
+  ],
+  "type": "FeatureCollection"
+}

@@ -3,58 +3,48 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Pesquisa F.O">
 <link rel="manifest" href="manifest.json">
-<title>Pesquisa F.O</title>
+<title>FO Flores</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+body {
+  background-color: #1A1A1A;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+h1 {
+  font-size: 36px;
+  margin-bottom: 30px;
+}
+button {
+  width: auto;
+  padding: 12px 30px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #1565c0;
+}
+</style>
 </head>
 <body>
-<div id="app">
-  <button id="btnAbrirCalculadora">Calculadora de Cores</button>
-  <input type="file" id="btnLoadCsv" accept=".csv,.txt">
-  <div id="textFileName">Nenhum ficheiro carregado</div>
+  <h1>Bem-vindo à FO Flores</h1>
+  <p>Aplicação de Pesquisa de Fibra Óptica</p>
+  <button onclick="window.location.href='app.html'">Iniciar</button>
 
-  <div class="spinner-row">
-    <label>Escolher SRO:</label>
-    <select id="spinnerSro"></select>
-  </div>
-
-  <div class="spinner-row">
-    <label>Escolher PDO:</label>
-    <select id="spinnerPdo"></select>
-  </div>
-
-  <div class="spinner-row">
-    <label>Escolher Porto:</label>
-    <select id="spinnerPorto"></select>
-  </div>
-
-  <button id="btnPesquisar">Pesquisar</button>
-  <div id="textResult" class="result-box"></div>
-</div>
-
-<!-- Modal da Calculadora -->
-<div id="modalCalculadora" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Calculadora de Cores</h2>
-    <div class="fibra-row">
-      <input id="editFibra" type="number" placeholder="Número da Fibra (1-288)" min="1" max="288">
-      <button id="btnCalcularCor">Calcular</button>
-    </div>
-    <div id="textCorResult"></div>
-  </div>
-</div>
-
-<script src="app.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('SW registrado'))
-      .catch(err => console.log('SW falhou:', err));
+    navigator.serviceWorker.register('service-worker.js');
   });
 }
 </script>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calculadora de Cores</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <nav>
+    <button onclick="window.location.href='index.html'">🏠 Início</button>
+    <button onclick="window.location.href='app.html'">📂 CSV</button>
+    <button onclick="window.location.href='calculadora.html'">🎨 Calculadora</button>
+    <button onclick="window.location.href='mapa.html'">🗺️ Mapa</button>
+  </nav>
+</header>
+
+<main style="text-align:center;padding:20px;">
+  <h2>Calculadora de Cores</h2>
+  <input id="editFibra" type="number" placeholder="Número da Fibra (1-288)" min="1" max="288">
+  <button id="btnCalcularCor">Calcular</button>
+  <div id="textCorResult" style="margin-top:20px;"></div>
+</main>
+
+<script>
+document.getElementById("btnCalcularCor").onclick = () => {
+  const numero = parseInt(document.getElementById("editFibra").value);
+  if (!numero || numero < 1 || numero > 288) {
+    alert("Insira um número válido (1-288).");
+    return;
+  }
+  const fibraColors = {
+    1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",5:"#000000",6:"#FFFF00",
+    7:"#FFA500",8:"#808080",9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"
+  };
+  const corIndexFibra = ((numero - 1) % 12) + 1;
+  const corFibra = fibraColors[corIndexFibra];
+  const tubo = Math.floor((numero - 1) / 12) + 1;
+  const corTubo = fibraColors[((tubo - 1) % 12) + 1];
+  document.getElementById("textCorResult").innerHTML =
+    `Fibra ${numero}: <font color='${corFibra}'>●</font> &nbsp; Tubo ${tubo}: <font color='${corTubo}'>●</font>`;
+};
+</script>
+</body>
+</html>
