@@ -3,25 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mapa Locais</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<title>Mapa Interativo FO Flores</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
 <style>
-#map {
-  width: 100%;
-  height: 80vh;
-  border-radius: 8px;
-  transition: transform 0.3s ease;
-}
-#controls {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-#controls button {
-  padding: 8px 12px;
-}
+  #map {
+    width: 100%;
+    height: 85vh;
+    border-radius: 8px;
+  }
+  #searchBox {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  nav {
+    display: flex;
+    gap: 8px;
+    background-color: #2B2B2B;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
@@ -46,35 +49,26 @@
 
 <div id="map"></div>
 
-<div id="controls">
-  <button id="rotateLeft">↩️ Rodar Esquerda</button>
-  <button id="rotateRight">↪️ Rodar Direita</button>
-  <button id="resetRotation">🔄 Reset</button>
-</div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  const map = L.map('map').setView([39.454, -31.13], 13);
-  
-  // 🛰️ Vista de satélite
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: 'Tiles © Esri, Maxar, Earthstar Geographics'
-  }).addTo(map);
+  // Inicializar o mapa com vista satélite e rotação 3D
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://api.maptiler.com/maps/hybrid/style.json?key=Cj5w3ovW3aR8RGpiAoug',
+    center: [-31.13, 39.454],
+    zoom: 13,
+    pitch: 60, // Inclinação do mapa
+    bearing: 0, // Rotação inicial
+    attributionControl: true
+  });
 
+  // Controles de navegação (zoom, rotação)
+  map.addControl(new maplibregl.NavigationControl());
+
+  // Lista global de marcadores
   let todosOsMarkers = [];
 
-  // Ícones personalizados
-  const blueIcon = new L.Icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-    iconSize: [32, 32]
-  });
-  const greenIcon = new L.Icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-    iconSize: [32, 32]
-  });
-
-  // Carregar GeoJSON
+  // Carregar locais do ficheiro JSON
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -83,49 +77,44 @@
         const nome = f.properties.name;
         const address = f.properties.address || "";
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
-        const icon = tipo === "jfo" ? greenIcon : blueIcon;
+        const color = tipo === "jfo" ? "lime" : "dodgerblue";
 
-        const marker = L.marker([lat, lng], { icon }).bindPopup(`<b>${nome}</b><br>${address}`);
+        // Cria marcador colorido
+        const el = document.createElement('div');
+        el.style.backgroundColor = color;
+        el.style.width = '16px';
+        el.style.height = '16px';
+        el.style.borderRadius = '50%';
+        el.style.border = '2px solid white';
+
+        const marker = new maplibregl.Marker(el)
+          .setLngLat([lng, lat])
+          .setPopup(new maplibregl.Popup().setHTML(`<b>${nome}</b><br>${address}`))
+          .addTo(map);
+
         todosOsMarkers.push({ nome, tipo, marker });
-        marker.addTo(map);
       });
     });
 
-  // 🔍 Pesquisa
+  // 🔍 Pesquisa manual
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
     const encontrado = todosOsMarkers.find(m => m.nome.toLowerCase().includes(termo));
     if (!encontrado) return alert("Local não encontrado!");
-    map.flyTo(encontrado.marker.getLatLng(), 17);
-    encontrado.marker.openPopup();
+    const pos = encontrado.marker.getLngLat();
+    map.flyTo({ center: pos, zoom: 17, speed: 0.8 });
+    encontrado.marker.togglePopup();
   });
 
-  // 🔎 Filtro
+  // 🎚️ Filtro de tipo
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
-      if (filtro === "todos" || filtro === tipo) map.addLayer(marker);
-      else map.removeLayer(marker);
+      if (filtro === "todos" || filtro === tipo) marker.addTo(map);
+      else marker.remove();
     });
   });
-
-  // 🔄 Controlo de rotação visual
-  let currentRotation = 0;
-  const mapEl = document.getElementById('map');
-
-  document.getElementById('rotateLeft').onclick = () => {
-    currentRotation -= 15;
-    mapEl.style.transform = `rotate(${currentRotation}deg)`;
-  };
-  document.getElementById('rotateRight').onclick = () => {
-    currentRotation += 15;
-    mapEl.style.transform = `rotate(${currentRotation}deg)`;
-  };
-  document.getElementById('resetRotation').onclick = () => {
-    currentRotation = 0;
-    mapEl.style.transform = 'rotate(0deg)';
-  };
 </script>
 </body>
 </html>
