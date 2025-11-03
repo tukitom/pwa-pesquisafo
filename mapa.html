@@ -6,6 +6,23 @@
 <title>Mapa Locais</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <link rel="stylesheet" href="styles.css">
+<style>
+#map {
+  width: 100%;
+  height: 80vh;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+#controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+#controls button {
+  padding: 8px 12px;
+}
+</style>
 </head>
 <body>
 <header>
@@ -29,16 +46,25 @@
 
 <div id="map"></div>
 
+<div id="controls">
+  <button id="rotateLeft">↩️ Rodar Esquerda</button>
+  <button id="rotateRight">↪️ Rodar Direita</button>
+  <button id="resetRotation">🔄 Reset</button>
+</div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
   const map = L.map('map').setView([39.454, -31.13], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  
+  // 🛰️ Vista de satélite
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
-    attribution: '© OpenStreetMap'
+    attribution: 'Tiles © Esri, Maxar, Earthstar Geographics'
   }).addTo(map);
 
   let todosOsMarkers = [];
 
+  // Ícones personalizados
   const blueIcon = new L.Icon({
     iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
     iconSize: [32, 32]
@@ -48,6 +74,7 @@
     iconSize: [32, 32]
   });
 
+  // Carregar GeoJSON
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -64,6 +91,7 @@
       });
     });
 
+  // 🔍 Pesquisa
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
@@ -73,6 +101,7 @@
     encontrado.marker.openPopup();
   });
 
+  // 🔎 Filtro
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
@@ -80,6 +109,23 @@
       else map.removeLayer(marker);
     });
   });
+
+  // 🔄 Controlo de rotação visual
+  let currentRotation = 0;
+  const mapEl = document.getElementById('map');
+
+  document.getElementById('rotateLeft').onclick = () => {
+    currentRotation -= 15;
+    mapEl.style.transform = `rotate(${currentRotation}deg)`;
+  };
+  document.getElementById('rotateRight').onclick = () => {
+    currentRotation += 15;
+    mapEl.style.transform = `rotate(${currentRotation}deg)`;
+  };
+  document.getElementById('resetRotation').onclick = () => {
+    currentRotation = 0;
+    mapEl.style.transform = 'rotate(0deg)';
+  };
 </script>
 </body>
 </html>
