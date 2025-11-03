@@ -51,10 +51,10 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // === Inicializar mapa satélite híbrido ===
+  // === Mapa base nítido (ruas)
   const map = new maplibregl.Map({
     container: 'map',
-    style: 'https://api.maptiler.com/maps/hybrid/style.json?key=Cj5w3ovW3aR8RGpiAoug',
+    style: 'https://api.maptiler.com/maps/streets/style.json?key=Cj5w3ovW3aR8RGpiAoug',
     center: [-31.13, 39.454],
     zoom: 14,
     pitch: 0,
@@ -64,10 +64,9 @@
     attributionControl: true
   });
 
-  // Controlos de navegação (zoom e rotação)
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }));
 
-  // Botão para repor orientação norte
+  // Botão norte
   const btnReset = document.createElement('button');
   btnReset.textContent = '🔄 Norte para cima';
   btnReset.style.position = 'absolute';
@@ -89,15 +88,14 @@
     .then(res => res.json())
     .then(data => {
       data.features.forEach(f => {
-        const coords = f.geometry.coordinates;
+        const coords = f.geometry?.coordinates;
         if (!coords || coords.length < 2) return;
 
         const [lng, lat] = coords;
-        const nome = (f.properties.name || "Sem nome").trim();
+        const nome = String(f.properties?.name || "Sem nome").trim();
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
         const color = tipo === "jfo" ? "#00FF00" : "#007BFF";
 
-        // Marcador simples
         const el = document.createElement("div");
         el.style.backgroundColor = color;
         el.style.width = "16px";
@@ -106,8 +104,9 @@
         el.style.border = "2px solid white";
         el.style.cursor = "pointer";
 
+        // 🔧 Popup só com o nome
         const popup = new maplibregl.Popup({ offset: 25 })
-          .setHTML(`<b>${nome}</b>`);
+          .setHTML(`<b style="font-family:Arial,sans-serif;font-size:14px;">${nome}</b>`);
 
         const marker = new maplibregl.Marker(el)
           .setLngLat([lng, lat])
