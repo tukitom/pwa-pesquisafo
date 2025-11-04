@@ -25,6 +25,19 @@
     border-radius: 6px;
     margin-bottom: 10px;
   }
+  #btnDownload {
+    display: none; /* Só aparece no modo editor */
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #btnDownload:hover {
+    background-color: #45a049;
+  }
 </style>
 </head>
 <body>
@@ -49,8 +62,25 @@
 
 <div id="map"></div>
 
+<!-- Botão para descarregar JSON (só aparece no modo edição) -->
+<button id="btnDownload">💾 Descarregar JSON atualizado</button>
+
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
+  // ---- CONFIGURAÇÃO DE EDIÇÃO ----
+  let modoEditor = false;
+
+  if (confirm("Ativar modo de edição? (Apenas para o administrador)")) {
+    const senha = prompt("Digite a senha de edição:");
+    if (senha === "flores123") { // <-- altera a senha aqui
+      modoEditor = true;
+      alert("Modo de edição ativado!");
+      document.getElementById("btnDownload").style.display = "inline-block";
+    } else {
+      alert("Senha incorreta. Apenas visualização.");
+    }
+  }
+
   // Inicializar o mapa com imagem de satélite Esri
   const map = new maplibregl.Map({
     container: 'map',
@@ -87,11 +117,14 @@
   map.addControl(new maplibregl.NavigationControl());
 
   let todosOsMarkers = [];
+  let data = null; // Aqui guardaremos o GeoJSON original
 
   // Carregar e exibir marcadores
   fetch("Locais etiquetados.json")
     .then(res => res.json())
-    .then(data => {
+    .then(json => {
+      data = json; // guarda o JSON original completo
+
       data.features.forEach(f => {
         const [lng, lat] = f.geometry.coordinates;
         const nome = f.properties.name;
@@ -108,10 +141,19 @@
         const popup = new maplibregl.Popup({ closeButton: true })
           .setHTML(`<div style="color: black;"><b>${nome}</b></div>`);
 
-        const marker = new maplibregl.Marker(el)
+        const marker = new maplibregl.Marker(el, { draggable: modoEditor })
           .setLngLat([lng, lat])
           .setPopup(popup)
           .addTo(map);
+
+        // Se estiver no modo editor, permite mover e atualizar as coordenadas
+        if (modoEditor) {
+          marker.on('dragend', () => {
+            const novaPos = marker.getLngLat();
+            f.geometry.coordinates = [novaPos.lng, novaPos.lat];
+            console.log(`Atualizado: ${nome}`, novaPos);
+          });
+        }
 
         todosOsMarkers.push({ nome, tipo, marker });
       });
@@ -136,6 +178,25 @@
       else marker.remove();
     });
   });
+
+  // Botão de download manual
+  document.getElementById("btnDownload").addEventListener("click", () => {
+    if (!data) return alert("Os dados ainda não foram carregados.");
+    guardarAlteracoes();
+  });
+
+  // Função para descarregar JSON atualizado
+  function guardarAlteracoes() {
+    const jsonData = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonData], { type: "application/json" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Locais etiquetados.json";
+    a.click();
+
+    alert("Ficheiro JSON atualizado foi descarregado!\nSubstitui o antigo no GitHub.");
+  }
 </script>
 </body>
 </html>
