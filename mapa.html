@@ -3,42 +3,79 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mapa Locais</title>
+<title>Mapa Locais (Rotação Livre)</title>
+
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-<link rel="stylesheet" href="styles.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Plugin Leaflet.Rotate -->
+<script src="https://unpkg.com/leaflet-rotate/dist/leaflet-rotate.min.js"></script>
+
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+  #map {
+    height: 100%;
+    width: 100%;
+  }
+  #searchBox {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: white;
+    padding: 6px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+  input, select, button {
+    margin: 4px;
+  }
+
+  /* Popups com texto preto */
+  .leaflet-popup-content {
+    color: black !important;
+    font-weight: bold;
+    font-size: 15px;
+    text-align: center;
+  }
+</style>
 </head>
 <body>
-<header>
-  <nav>
-    <button onclick="window.location.href='index.html'">🏠 Início</button>
-    <button onclick="window.location.href='app.html'">📂 CSV</button>
-    <button onclick="window.location.href='calculadora.html'">🎨 Calculadora</button>
-    <button onclick="window.location.href='mapa.html'">🗺️ Mapa</button>
-  </nav>
-</header>
 
 <div id="searchBox">
-  <input id="searchInput" type="text" placeholder="Ex: PDO1001 ou JFO1001...">
+  <input id="searchInput" type="text" placeholder="Ex: PDO1001 ou JFO1001">
   <select id="filterSelect">
     <option value="todos">Todos</option>
     <option value="pdo">Só PDOs</option>
     <option value="jfo">Só Juntas</option>
   </select>
-  <button id="btnSearch">Procurar</button>
+  <button id="btnSearch">🔍</button>
 </div>
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  const map = L.map('map').setView([39.454, -31.13], 13);
+  // Cria o mapa com rotação livre
+  const map = L.map('map', {
+    center: [39.454, -31.13],
+    zoom: 13,
+    rotate: true,        // ativa rotação
+    touchRotate: true,   // permite girar com dois dedos
+    touchZoom: true,     // zoom com gesto
+    zoomControl: true     // mantém controle de zoom
+  });
+
+  // Camada base
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  let todosOsMarkers = [];
-
+  // Ícones personalizados
   const blueIcon = new L.Icon({
     iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
     iconSize: [32, 32]
@@ -48,22 +85,28 @@
     iconSize: [32, 32]
   });
 
+  let todosOsMarkers = [];
+
+  // Carregar JSON de locais
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
       data.features.forEach(f => {
         const [lng, lat] = f.geometry.coordinates;
         const nome = f.properties.name;
-        const address = f.properties.address || "";
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
         const icon = tipo === "jfo" ? greenIcon : blueIcon;
 
-        const marker = L.marker([lat, lng], { icon }).bindPopup(`<b>${nome}</b><br>${address}`);
+        // Popup mostra apenas o nome, em preto
+        const marker = L.marker([lat, lng], { icon })
+          .bindPopup(`<div style="color:black;"><b>${nome}</b></div>`);
+
         todosOsMarkers.push({ nome, tipo, marker });
         marker.addTo(map);
       });
     });
 
+  // Pesquisa
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
@@ -73,6 +116,7 @@
     encontrado.marker.openPopup();
   });
 
+  // Filtro
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
