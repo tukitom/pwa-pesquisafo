@@ -51,13 +51,34 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa em street view, sem inclinação
+  // Inicializar o mapa com imagem de satélite Esri
   const map = new maplibregl.Map({
     container: 'map',
-    style: 'https://api.maptiler.com/maps/streets/style.json?key=Cj5w3ovW3aR8RGpiAoug', // street view
+    style: {
+      version: 8,
+      sources: {
+        esri: {
+          type: 'raster',
+          tiles: [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+          ],
+          tileSize: 256,
+          attribution: '© Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+        }
+      },
+      layers: [
+        {
+          id: 'esri-imagery',
+          type: 'raster',
+          source: 'esri',
+          minzoom: 0,
+          maxzoom: 19
+        }
+      ]
+    },
     center: [-31.13, 39.454],
     zoom: 13,
-    pitch: 0, // sem inclinação
+    pitch: 0,
     bearing: 0,
     attributionControl: true
   });
@@ -67,6 +88,7 @@
 
   let todosOsMarkers = [];
 
+  // Carregar e exibir marcadores
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -83,7 +105,6 @@
         el.style.borderRadius = '50%';
         el.style.border = '2px solid white';
 
-        // Popup mostrando apenas o nome, texto preto
         const popup = new maplibregl.Popup({ closeButton: true })
           .setHTML(`<div style="color: black;"><b>${nome}</b></div>`);
 
