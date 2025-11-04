@@ -51,28 +51,29 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa com imagem de satélite Esri
+  // Inicializar o mapa com imagem híbrida do Google (satélite + nomes de ruas)
   const map = new maplibregl.Map({
     container: 'map',
     style: {
       version: 8,
       sources: {
-        esri: {
+        google: {
           type: 'raster',
           tiles: [
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            // 'lyrs=y' = híbrido (satélite + rótulos)
+            'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
           ],
           tileSize: 256,
-          attribution: '© Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+          attribution: '© Google Maps'
         }
       },
       layers: [
         {
-          id: 'esri-imagery',
+          id: 'google-hybrid',
           type: 'raster',
-          source: 'esri',
+          source: 'google',
           minzoom: 0,
-          maxzoom: 19
+          maxzoom: 22
         }
       ]
     },
