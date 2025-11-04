@@ -51,13 +51,13 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa sem inclinação
+  // Inicializar o mapa em street view sem inclinação
   const map = new maplibregl.Map({
     container: 'map',
-    style: 'https://api.maptiler.com/maps/hybrid/style.json?key=Cj5w3ovW3aR8RGpiAoug',
+    style: 'https://api.maptiler.com/maps/streets/style.json?key=Cj5w3ovW3aR8RGpiAoug', // street style
     center: [-31.13, 39.454],
     zoom: 13,
-    pitch: 0, // Inclinação removida
+    pitch: 0, // sem inclinação
     bearing: 0,
     attributionControl: true
   });
