@@ -25,19 +25,6 @@
     border-radius: 6px;
     margin-bottom: 10px;
   }
-  #btnDownload {
-    display: none; /* Só aparece no modo editor */
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  #btnDownload:hover {
-    background-color: #45a049;
-  }
 </style>
 </head>
 <body>
@@ -62,28 +49,8 @@
 
 <div id="map"></div>
 
-<!-- Botão para descarregar JSON (só aparece no modo edição) -->
-<button id="btnDownload">💾 Descarregar JSON atualizado</button>
-
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // ---- CONFIGURAÇÃO DE EDIÇÃO ----
-  let modoEditor = false;
-
-  // Pergunta se o utilizador quer ativar o modo edição
-  if (confirm("Ativar modo de edição? (Apenas para o administrador)")) {
-    const senha = prompt("Digite a senha de edição:");
-    if (senha === "flores123") { // <-- podes mudar a senha aqui
-      modoEditor = true;
-      alert("Modo de edição ativado!");
-      document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("btnDownload").style.display = "inline-block";
-      });
-    } else {
-      alert("Senha incorreta. Apenas visualização.");
-    }
-  }
-
   // Inicializar o mapa com imagem de satélite Esri
   const map = new maplibregl.Map({
     container: 'map',
@@ -120,14 +87,11 @@
   map.addControl(new maplibregl.NavigationControl());
 
   let todosOsMarkers = [];
-  let data = null; // Armazena o GeoJSON original
 
   // Carregar e exibir marcadores
   fetch("Locais etiquetados.json")
     .then(res => res.json())
-    .then(json => {
-      data = json; // Guarda o GeoJSON completo
-
+    .then(data => {
       data.features.forEach(f => {
         const [lng, lat] = f.geometry.coordinates;
         const nome = f.properties.name;
@@ -140,27 +104,14 @@
         el.style.height = '16px';
         el.style.borderRadius = '50%';
         el.style.border = '2px solid white';
-        el.style.cursor = modoEditor ? 'grab' : 'pointer';
 
         const popup = new maplibregl.Popup({ closeButton: true })
           .setHTML(`<div style="color: black;"><b>${nome}</b></div>`);
 
-        // Cria o marcador (arrastável apenas se for editor)
-        const marker = new maplibregl.Marker(el, { draggable: modoEditor })
+        const marker = new maplibregl.Marker(el)
           .setLngLat([lng, lat])
           .setPopup(popup)
           .addTo(map);
-
-        if (modoEditor) {
-          // Mudar cursor durante o arrasto e atualizar coordenadas
-          marker.on('dragstart', () => { el.style.cursor = 'grabbing'; });
-          marker.on('dragend', () => {
-            el.style.cursor = 'grab';
-            const novaPos = marker.getLngLat();
-            f.geometry.coordinates = [novaPos.lng, novaPos.lat];
-            console.log(`Atualizado: ${nome}`, novaPos);
-          });
-        }
 
         todosOsMarkers.push({ nome, tipo, marker });
       });
@@ -185,24 +136,6 @@
       else marker.remove();
     });
   });
-
-  // Botão para descarregar o JSON atualizado
-  document.getElementById("btnDownload").addEventListener("click", () => {
-    if (!data) return alert("Os dados ainda não foram carregados.");
-    guardarAlteracoes();
-  });
-
-  // Função para gerar o ficheiro atualizado
-  function guardarAlteracoes() {
-    const jsonData = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonData], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "Locais etiquetados.json";
-    a.click();
-
-    alert("Ficheiro JSON atualizado descarregado!\nSubstitui o antigo no GitHub.");
-  }
 </script>
 </body>
 </html>
