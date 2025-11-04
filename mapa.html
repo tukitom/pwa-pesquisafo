@@ -51,10 +51,10 @@
 
 <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa em street view sem inclinação
+  // Inicializar o mapa em street view, sem inclinação
   const map = new maplibregl.Map({
     container: 'map',
-    style: 'https://api.maptiler.com/maps/streets/style.json?key=Cj5w3ovW3aR8RGpiAoug', // street style
+    style: 'https://api.maptiler.com/maps/streets/style.json?key=Cj5w3ovW3aR8RGpiAoug', // street view
     center: [-31.13, 39.454],
     zoom: 13,
     pitch: 0, // sem inclinação
@@ -62,13 +62,11 @@
     attributionControl: true
   });
 
-  // Controles de navegação (zoom, rotação)
+  // Controles de navegação
   map.addControl(new maplibregl.NavigationControl());
 
-  // Lista global de marcadores
   let todosOsMarkers = [];
 
-  // Carregar locais do ficheiro JSON
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -78,7 +76,6 @@
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
         const color = tipo === "jfo" ? "lime" : "dodgerblue";
 
-        // Cria marcador colorido
         const el = document.createElement('div');
         el.style.backgroundColor = color;
         el.style.width = '16px';
@@ -86,7 +83,7 @@
         el.style.borderRadius = '50%';
         el.style.border = '2px solid white';
 
-        // Popup mostrando apenas o nome em preto
+        // Popup mostrando apenas o nome, texto preto
         const popup = new maplibregl.Popup({ closeButton: true })
           .setHTML(`<div style="color: black;"><b>${nome}</b></div>`);
 
@@ -99,7 +96,7 @@
       });
     });
 
-  // 🔍 Pesquisa manual
+  // Pesquisa manual
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
@@ -110,7 +107,7 @@
     encontrado.marker.togglePopup();
   });
 
-  // 🎚️ Filtro de tipo
+  // Filtro de tipo
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
