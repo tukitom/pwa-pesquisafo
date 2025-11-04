@@ -9,11 +9,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- MapLibre (motor do MapTiler com rotação) -->
+<!-- MapLibre + integração Leaflet -->
 <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
 
+<!-- O SEU CSS original -->
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -36,25 +37,29 @@
   <button id="btnSearch">Procurar</button>
 </div>
 
+<!-- Mantém o layout original -->
 <div id="map" style="height: calc(100vh - 130px);"></div>
 
 <script>
   // === CONFIGURAÇÃO DO MAPA ===
   const map = L.map('map').setView([39.454, -31.13], 13);
 
-  // === MAPA BASE MAPTILER COM ROTAÇÃO, SEM INCLINAÇÃO ===
-  const apiKey = "Cj5w3ovW3aR8RGpiAoug"; // a tua chave MapTiler
-  const gl = L.maplibreGL({
+  // === MAPA BASE MAPTILER ===
+  const apiKey = "Cj5w3ovW3aR8RGpiAoug"; // sua chave do MapTiler
+
+  const glLayer = L.maplibreGL({
     style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${apiKey}`,
     interactive: true,
-    // Evita inclinação e limita só à rotação
-    maplibreOptions: {
-      dragRotate: true,   // permite girar
-      touchPitch: false,  // desativa inclinação com toque
-      pitchWithRotate: false, // evita inclinar ao girar
-      pitch: 0            // fixa a inclinação em 0
-    }
+    attribution: '© MapTiler © OpenStreetMap contributors'
   }).addTo(map);
+
+  // Força o mapa a começar sem inclinação
+  glLayer.getMaplibreMap().on('load', () => {
+    const glMap = glLayer.getMaplibreMap();
+    glMap.setPitch(0); // sem inclinação
+    glMap.dragRotate.enable(); // rotação com mouse ou toque
+    glMap.touchZoomRotate.enableRotation(); // rotação com dois dedos
+  });
 
   // === ÍCONES ===
   const blueIcon = new L.Icon({
@@ -68,7 +73,7 @@
 
   let todosOsMarkers = [];
 
-  // === CARREGAR OS DADOS ===
+  // === CARREGAR JSON ===
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -78,7 +83,7 @@
         const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
         const icon = tipo === "jfo" ? greenIcon : blueIcon;
 
-        // Popup só com o nome, texto preto
+        // Popup só com nome (em preto)
         const marker = L.marker([lat, lng], { icon })
           .bindPopup(`<div style="color:black;"><b>${nome}</b></div>`);
         todosOsMarkers.push({ nome, tipo, marker });
@@ -86,7 +91,7 @@
       });
     });
 
-  // === BUSCA ===
+  // === PESQUISA ===
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO ou JFO.");
