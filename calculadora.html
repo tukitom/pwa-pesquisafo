@@ -6,13 +6,24 @@
 <title>Calculadora de Cores</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-  body { font-family: 'Segoe UI', sans-serif; }
-  table { border-collapse:collapse; margin:30px auto; box-shadow:0 0 8px rgba(0,0,0,0.1); }
+  body { font-family: 'Segoe UI', sans-serif; margin:0; padding:0; background:#f9f9f9; }
+  header nav { display:flex; justify-content:center; gap:10px; padding:10px; background:#eee; }
+  button { border:none; padding:8px 12px; border-radius:8px; cursor:pointer; background:#ddd; }
+  main { text-align:center; padding:20px; }
+  h2, h3 { margin-bottom:15px; }
+  input, button#btnCalcularCor { margin:5px; padding:6px 10px; font-size:14px; }
+  table { border-collapse:collapse; margin:25px auto; box-shadow:0 0 6px rgba(0,0,0,0.1); background:white; }
   th, td { border:1px solid #ccc; padding:3px 5px; text-align:center; font-size:11px; }
-  th { background:#eee; font-weight:bold; }
-  .sigla { font-weight:bold; width:35px; }
+  th { background:#fafafa; font-weight:bold; }
+  .sigla { width:35px; font-weight:bold; }
   .fo { width:25px; font-weight:bold; }
-  #tabelaFibra { overflow-x:auto; }
+  #tabelaFibra { overflow-x:auto; margin-top:25px; }
+  /* Responsividade */
+  @media (max-width:800px){
+    table { font-size:9px; }
+    th, td { padding:2px; }
+    h2, h3 { font-size:16px; }
+  }
 </style>
 </head>
 <body>
@@ -25,18 +36,18 @@
   </nav>
 </header>
 
-<main style="text-align:center;padding:20px;">
+<main>
   <h2>Calculadora de Cores</h2>
   <input id="editFibra" type="number" placeholder="Número da Fibra (1-288)" min="1" max="288">
   <button id="btnCalcularCor">Calcular</button>
-  <div id="textCorResult" style="margin-top:20px;"></div>
+  <div id="textCorResult" style="margin-top:15px;font-size:15px;"></div>
 
-  <h3 style="margin-top:40px;">Tabela de Identificação de Fibras Ópticas (1–288)</h3>
+  <h3 style="margin-top:35px;">Tabela de Identificação de Fibras Ópticas (1–288)</h3>
   <div id="tabelaFibra"></div>
 </main>
 
 <script>
-// === Calculadora ===
+// === CALCULADORA ===
 document.getElementById("btnCalcularCor").onclick = () => {
   const numero = parseInt(document.getElementById("editFibra").value);
   if (!numero || numero < 1 || numero > 288) {
@@ -55,7 +66,7 @@ document.getElementById("btnCalcularCor").onclick = () => {
     `Fibra ${numero}: <font color='${corFibra}'>●</font> &nbsp; Tubo ${tubo}: <font color='${corTubo}'>●</font>`;
 };
 
-// === Tabela de 12x24 ===
+// === TABELA DE CORES (12x24) ===
 const cores = [
   ["Branco","#FFFFFF","BR"],
   ["Vermelho","#FF0000","VM"],
@@ -73,16 +84,22 @@ const cores = [
 
 function gerarTabela(){
   let html = `<table><thead><tr><th class='fo'>FO</th><th class='sigla'>Sigla</th>`;
-  for(let t=1;t<=24;t++) html += `<th>${t}</th>`;
+  // Cabeçalho com cores dentro dos números dos tubos
+  for(let t=1;t<=24;t++){
+    const corTubo = cores[(t-1)%12][1];
+    const textoCor = ["#000000","#8B4513","#800080","#808080","#0000FF","#FF0000"].includes(corTubo) ? "#fff" : "#000";
+    html += `<th style="background:${corTubo};color:${textoCor}">${t}</th>`;
+  }
   html += `</tr></thead><tbody>`;
   
+  // Linhas das fibras
   for(let f=0;f<12;f++){
     const [nome, corFibra, sigla] = cores[f];
     html += `<tr><td>${f+1}</td><td>${sigla}</td>`;
     for(let t=1;t<=24;t++){
       const numero = (t - 1) * 12 + (f + 1);
-      const textColor = ["#000000","#8B4513","#800080","#808080","#0000FF","#FF0000"].includes(corFibra) ? "#fff" : "#000";
-      html += `<td style="background:${corFibra};color:${textColor}">${numero}</td>`;
+      const textoCor = ["#000000","#8B4513","#800080","#808080","#0000FF","#FF0000"].includes(corFibra) ? "#fff" : "#000";
+      html += `<td style="background:${corFibra};color:${textoCor}">${numero}</td>`;
     }
     html += `</tr>`;
   }
