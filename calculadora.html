@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Calculadora de Cores</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  body { font-family: 'Segoe UI', sans-serif; }
+  table { border-collapse:collapse; margin:30px auto; box-shadow:0 0 8px rgba(0,0,0,0.1); }
+  th, td { border:1px solid #ccc; padding:3px 5px; text-align:center; font-size:11px; }
+  th { background:#eee; font-weight:bold; }
+  .sigla { font-weight:bold; width:35px; }
+  .fo { width:25px; font-weight:bold; }
+  #tabelaFibra { overflow-x:auto; }
+</style>
 </head>
 <body>
 <header>
@@ -21,9 +30,13 @@
   <input id="editFibra" type="number" placeholder="Número da Fibra (1-288)" min="1" max="288">
   <button id="btnCalcularCor">Calcular</button>
   <div id="textCorResult" style="margin-top:20px;"></div>
+
+  <h3 style="margin-top:40px;">Tabela de Identificação de Fibras Ópticas (1–288)</h3>
+  <div id="tabelaFibra"></div>
 </main>
 
 <script>
+// === Calculadora ===
 document.getElementById("btnCalcularCor").onclick = () => {
   const numero = parseInt(document.getElementById("editFibra").value);
   if (!numero || numero < 1 || numero > 288) {
@@ -41,6 +54,42 @@ document.getElementById("btnCalcularCor").onclick = () => {
   document.getElementById("textCorResult").innerHTML =
     `Fibra ${numero}: <font color='${corFibra}'>●</font> &nbsp; Tubo ${tubo}: <font color='${corTubo}'>●</font>`;
 };
+
+// === Tabela de 12x24 ===
+const cores = [
+  ["Branco","#FFFFFF","BR"],
+  ["Vermelho","#FF0000","VM"],
+  ["Verde","#00FF00","VD"],
+  ["Azul","#0000FF","AZ"],
+  ["Preto","#000000","PR"],
+  ["Amarelo","#FFFF00","AM"],
+  ["Laranja","#FFA500","LR"],
+  ["Cinza","#808080","CZ"],
+  ["Marrom","#8B4513","CT"],
+  ["Violeta","#800080","VT"],
+  ["Rosa","#FFC0CB","RS"],
+  ["Turquesa","#40E0D0","TQ"]
+];
+
+function gerarTabela(){
+  let html = `<table><thead><tr><th class='fo'>FO</th><th class='sigla'>Sigla</th>`;
+  for(let t=1;t<=24;t++) html += `<th>${t}</th>`;
+  html += `</tr></thead><tbody>`;
+  
+  for(let f=0;f<12;f++){
+    const [nome, corFibra, sigla] = cores[f];
+    html += `<tr><td>${f+1}</td><td>${sigla}</td>`;
+    for(let t=1;t<=24;t++){
+      const numero = (t - 1) * 12 + (f + 1);
+      const textColor = ["#000000","#8B4513","#800080","#808080","#0000FF","#FF0000"].includes(corFibra) ? "#fff" : "#000";
+      html += `<td style="background:${corFibra};color:${textColor}">${numero}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  document.getElementById("tabelaFibra").innerHTML = html;
+}
+gerarTabela();
 </script>
 </body>
 </html>
