@@ -129,7 +129,7 @@
         const popup = new maplibregl.Popup({ closeButton: true })
           .setHTML(`<div style="color: black;"><b>${nome}</b></div>`);
 
-        const marker = new maplibregl.Marker({ element: el })
+        const marker = new maplibregl.Marker({ color })
           .setLngLat([lng, lat])
           .setPopup(popup)
           .addTo(map);
