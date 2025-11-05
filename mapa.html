@@ -38,11 +38,12 @@
 </header>
 
 <div id="searchBox">
-  <input id="searchInput" type="text" placeholder="Ex: PDO1001 ou JFO1001...">
+  <input id="searchInput" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
   <select id="filterSelect">
     <option value="todos">Todos</option>
     <option value="pdo">Só PDOs</option>
     <option value="jfo">Só Juntas</option>
+    <option value="sro">Só SROs</option>
   </select>
   <button id="btnSearch">Procurar</button>
 </div>
@@ -104,8 +105,19 @@
       data.features.forEach(f => {
         const [lng, lat] = f.geometry.coordinates;
         const nome = f.properties.name;
-        const tipo = nome.toLowerCase().includes("jfo") ? "jfo" : "pdo";
-        const color = tipo === "jfo" ? "lime" : "dodgerblue";
+
+        // 🔸 Identificar tipo (PDO, JFO, SRO)
+        let tipo = "outro";
+        if (nome.toLowerCase().includes("pdo")) tipo = "pdo";
+        else if (nome.toLowerCase().includes("jfo")) tipo = "jfo";
+        else if (nome.toLowerCase().includes("sro")) tipo = "sro";
+
+        // 🔸 Cores: PDO = azul, JFO = verde-limão, SRO = laranja
+        const color =
+          tipo === "pdo" ? "dodgerblue" :
+          tipo === "jfo" ? "lime" :
+          tipo === "sro" ? "orange" :
+          "gray";
 
         const el = document.createElement('div');
         el.style.backgroundColor = color;
@@ -126,10 +138,10 @@
       });
     });
 
-  // Pesquisa manual
+  // 🔍 Pesquisa manual
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
-    if (!termo) return alert("Escreve o nome do PDO ou JFO.");
+    if (!termo) return alert("Escreve o nome do PDO, JFO ou SRO.");
     const encontrado = todosOsMarkers.find(m => m.nome.toLowerCase().includes(termo));
     if (!encontrado) return alert("Local não encontrado!");
     const pos = encontrado.marker.getLngLat();
@@ -137,7 +149,7 @@
     encontrado.marker.togglePopup();
   });
 
-  // Filtro de tipo
+  // 🎯 Filtro de tipo
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
