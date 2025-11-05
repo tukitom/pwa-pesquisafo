@@ -3,6 +3,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2622756,
+          39.4531363
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1175"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1275053,
           39.4537522
         ],
@@ -16,6 +29,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2505088,
+          39.4133692
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO4"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.129068399999998,
           39.4557408
         ],
@@ -23,6 +49,45 @@
       },
       "properties": {
         "name": "PDO1071"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2419636,
+          39.385180399999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1154"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.134939399999997,
+          39.4604423
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1096"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.179813799999998,
+          39.3768262
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1020"
       },
       "type": "Feature"
     },
@@ -49,6 +114,45 @@
       },
       "properties": {
         "name": "PDO1124"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2489165,
+          39.3926733
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1155"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1852171,
+          39.3795043
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1090"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1794148,
+          39.3775013
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1018"
       },
       "type": "Feature"
     },
@@ -94,6 +198,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.261314,
+          39.4541058
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1172"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1393322,
+          39.460771099999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1130"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1348147,
           39.4475724
         ],
@@ -101,6 +231,19 @@
       },
       "properties": {
         "name": "PDO1040"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1488926,
+          39.4311535
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1142"
       },
       "type": "Feature"
     },
@@ -120,6 +263,97 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1716253,
+          39.380941799999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1001"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1700311,
+          39.383098499999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1010"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1573714,
+          39.4015057
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1151"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1808525,
+          39.3781671
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1111"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.159212399999998,
+          39.4005969
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1149"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2538548,
+          39.4331172
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1008"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1643394,
+          39.3919828
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1003"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.128556099999997,
           39.4532145
         ],
@@ -127,6 +361,19 @@
       },
       "properties": {
         "name": "PDO1079"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.154094699999998,
+          39.403227199999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1145"
       },
       "type": "Feature"
     },
@@ -146,6 +393,45 @@
     {
       "geometry": {
         "coordinates": [
+          -31.158341999999998,
+          39.402398
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1010"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2513875,
+          39.4344744
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1160"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1657989,
+          39.3931371
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1088"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1256788,
           39.4545775
         ],
@@ -159,6 +445,58 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2574738,
+          39.45789
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1164"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1657962,
+          39.3895145
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1109"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2613801,
+          39.4516912
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1176"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.180119599999998,
+          39.3777457
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1019"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.139827699999998,
           39.4461596
         ],
@@ -166,6 +504,32 @@
       },
       "properties": {
         "name": "PDO1037"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.185547999999997,
+          39.3824939
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1194"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1564554,
+          39.462855
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1115"
       },
       "type": "Feature"
     },
@@ -199,6 +563,110 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1766749,
+          39.3780771
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1023"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1486479,
+          39.4297416
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1141"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2633099,
+          39.4554786
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1167"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1650167,
+          39.390991199999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1004"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1666213,
+          39.388187599999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1007"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.156053399999998,
+          39.4022029
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1148"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.175780399999997,
+          39.3766341
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1024"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.15259,
+          39.4811745
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1137"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1275794,
           39.4548063
         ],
@@ -212,6 +680,45 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2538132,
+          39.433158899999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1159"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2622666,
+          39.4551149
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1171"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1576772,
+          39.480672
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1139"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.127111099999997,
           39.4522814
         ],
@@ -219,6 +726,45 @@
       },
       "properties": {
         "name": "PDO1063"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2539792,
+          39.4344925
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1196"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.248134999999998,
+          39.392778
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1009"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.179768199999998,
+          39.3788189
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1094"
       },
       "type": "Feature"
     },
@@ -245,6 +791,45 @@
       },
       "properties": {
         "name": "PDO1135"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.262006099999997,
+          39.4539002
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1170"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.251094799999997,
+          39.413444899999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO3"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.154947999999997,
+          39.402257
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1147"
       },
       "type": "Feature"
     },
@@ -278,6 +863,84 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1685904,
+          39.384965
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1195"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.263202,
+          39.4543421
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1173"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2553964,
+          39.4703684
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1162"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.251959199999998,
+          39.4327736
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1157"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.179343699999997,
+          39.3787175
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1022"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1869454,
+          39.3804142
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1183"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.140081499999997,
           39.4453976
         ],
@@ -285,6 +948,123 @@
       },
       "properties": {
         "name": "PDO1036"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.250938899999998,
+          39.4126502
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO5"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.186183699999997,
+          39.3831381
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1012"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.261018,
+          39.4507998
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1180"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2635725,
+          39.4553709
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1007"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1771621,
+          39.378332199999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1095"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.177042099999998,
+          39.3778322
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1197"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2495452,
+          39.4123399
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO6"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.176053699999997,
+          39.378026899999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1025"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.167446799999997,
+          39.3870308
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1008"
       },
       "type": "Feature"
     },
@@ -317,6 +1097,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1386355,
+          39.447626299999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1038"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1333237,
           39.457844699999995
         ],
@@ -330,27 +1123,13 @@
     {
       "geometry": {
         "coordinates": [
-          -31.1711989,
-          39.3812505
+          -31.262176,
+          39.4546901
         ],
         "type": "Point"
       },
       "properties": {
-        "name": "PDO1029"
-      },
-      "type": "Feature"
-    },
-    {
-      "geometry": {
-        "coordinates": [
-          -31.1742198,
-          39.3788386
-        ],
-        "type": "Point"
-      },
-      "properties": {
-        "address": "ER1-2, Lajes das Flores, Portugal",
-        "name": "PDO1027"
+        "name": "PDO1168"
       },
       "type": "Feature"
     },
@@ -370,6 +1149,175 @@
     {
       "geometry": {
         "coordinates": [
+          -31.153848,
+          39.4806326
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1012"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.167312,
+          39.3876284
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1006"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1743404,
+          39.3788805
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1027"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1570251,
+          39.401069199999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1177"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.255240899999997,
+          39.4683535
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1006"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.151681099999998,
+          39.4316023
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1011"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1463519,
+          39.4668023
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1122"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.180781699999997,
+          39.3799967
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1093"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1741942,
+          39.380390899999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1091"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.154918499999997,
+          39.463341199999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1116"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.263809199999997,
+          39.4564631
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1184"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1783453,
+          39.3774997
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1082"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1715703,
+          39.3783246
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1179"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1275664,
           39.4606212
         ],
@@ -377,6 +1325,32 @@
       },
       "properties": {
         "name": "PDO1050"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1823625,
+          39.3803406
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1013"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.183803899999997,
+          39.3791361
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1017"
       },
       "type": "Feature"
     },
@@ -435,6 +1409,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.183963199999997,
+          39.3796927
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1092"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1287167,
           39.4602448
         ],
@@ -455,6 +1442,45 @@
       },
       "properties": {
         "name": "PDO1051"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.248151399999998,
+          39.3928197
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1156"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.262967999999997,
+          39.4574991
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1166"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1713839,
+          39.3818048
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1029"
       },
       "type": "Feature"
     },
@@ -487,6 +1513,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.134933399999998,
+          39.459863
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1004"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1272053,
           39.4518633
         ],
@@ -494,6 +1533,32 @@
       },
       "properties": {
         "name": "PDO1062"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.147771799999997,
+          39.467082399999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1121"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.183947699999997,
+          39.3812412
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1014"
       },
       "type": "Feature"
     },
@@ -508,6 +1573,71 @@
       "properties": {
         "address": "Santa Cruz das Flores, Portugal",
         "name": "PDO1077"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1582455,
+          39.4026032
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1150"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1381001,
+          39.463775
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1136"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1460498,
+          39.4675012
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1123"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.188036399999998,
+          39.3850443
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1011"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1653624,
+          39.3894065
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1005"
       },
       "type": "Feature"
     },
@@ -579,6 +1709,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.152189999999997,
+          39.431461899999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1144"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.173849899999997,
+          39.377560599999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1030"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.141170499999998,
           39.4477039
         ],
@@ -592,6 +1748,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1497362,
+          39.466092599999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1119"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.128001899999997,
           39.451961499999996
         ],
@@ -599,6 +1768,84 @@
       },
       "properties": {
         "name": "PDO1044"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.187544199999998,
+          39.3809605
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1015"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1460065,
+          39.4675343
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1005"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.171995499999998,
+          39.382965999999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1028"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1647334,
+          39.3922217
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1113"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2603062,
+          39.4548713
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1169"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1860318,
+          39.380094199999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1016"
       },
       "type": "Feature"
     },
@@ -644,6 +1891,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1498726,
+          39.4304201
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1143"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1682025,
+          39.384797899999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1009"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1357793,
           39.447418
         ],
@@ -671,6 +1944,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.156496999999998,
+          39.4025726
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1146"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1743645,
+          39.3788106
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "SRO1014"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1300189,
           39.4623607
         ],
@@ -678,6 +1977,19 @@
       },
       "properties": {
         "name": "PDO1045"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1538178,
+          39.4805987
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1138"
       },
       "type": "Feature"
     },
@@ -697,13 +2009,13 @@
     {
       "geometry": {
         "coordinates": [
-          -31.135037299999997,
-          39.4605956
+          -31.1397771,
+          39.459597699999996
         ],
         "type": "Point"
       },
       "properties": {
-        "name": "PDO1069"
+        "name": "PDO1129"
       },
       "type": "Feature"
     },
@@ -736,6 +2048,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2551372,
+          39.468654
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1163"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.261589599999997,
+          39.4558234
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1165"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.129106999999998,
           39.4582097
         ],
@@ -743,6 +2081,19 @@
       },
       "properties": {
         "name": "PDO1055"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.151925799999997,
+          39.4802165
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1140"
       },
       "type": "Feature"
     },
@@ -762,6 +2113,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2541871,
+          39.4336877
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1161"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1813842,
+          39.3793092
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1021"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1373501,
           39.463074
         ],
@@ -769,6 +2146,19 @@
       },
       "properties": {
         "name": "PDO1134"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.143635099999997,
+          39.4559632
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1128"
       },
       "type": "Feature"
     },
@@ -788,6 +2178,32 @@
     {
       "geometry": {
         "coordinates": [
+          -31.1512499,
+          39.466138699999995
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1118"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1432523,
+          39.4602976
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1127"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1289283,
           39.4606742
         ],
@@ -801,6 +2217,19 @@
     {
       "geometry": {
         "coordinates": [
+          -31.2414147,
+          39.384259899999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1153"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
           -31.1254404,
           39.4540092
         ],
@@ -808,6 +2237,58 @@
       },
       "properties": {
         "name": "PDO1108"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2549468,
+          39.4324423
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1158"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.262958599999997,
+          39.4536574
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1174"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.2432329,
+          39.381983399999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1178"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1487712,
+          39.4666067
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1120"
       },
       "type": "Feature"
     },
@@ -847,6 +2328,19 @@
       },
       "properties": {
         "name": "PDO1081"
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          -31.1578877,
+          39.405460399999996
+        ],
+        "type": "Point"
+      },
+      "properties": {
+        "name": "PDO1152"
       },
       "type": "Feature"
     },
