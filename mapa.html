@@ -60,7 +60,6 @@
         google: {
           type: 'raster',
           tiles: [
-            // 'lyrs=y' = híbrido (satélite + rótulos)
             'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
           ],
           tileSize: 256,
@@ -84,8 +83,17 @@
     attributionControl: true
   });
 
-  // Controles de navegação
+  // Controles de navegação (zoom e rotação)
   map.addControl(new maplibregl.NavigationControl());
+
+  // 🧭 Controle de geolocalização do utilizador
+  map.addControl(
+    new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true
+    })
+  );
 
   let todosOsMarkers = [];
 
