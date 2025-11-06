@@ -17,12 +17,7 @@ const requiredCols = Object.keys(DISPLAY_NAMES);
 const btnLoadCsv = document.getElementById("btnLoadCsv");
 const btnPesquisar = document.getElementById("btnPesquisar");
 const spinnerSro = document.getElementById("spinnerSro");
-const spinnerSplitter = document.createElement("select"); // Novo spinner
-spinnerSplitter.id = "spinnerSplitter";
-spinnerSplitter.innerHTML = "<option value=''>-- (opcional) --</option>";
-spinnerSplitter.style.marginTop = "10px";
-spinnerSro.parentNode.insertBefore(spinnerSplitter, spinnerSro.nextSibling);
-
+const spinnerSplitter = document.getElementById("spinnerSplitter");
 const spinnerPdo = document.getElementById("spinnerPdo");
 const spinnerPorto = document.getElementById("spinnerPorto");
 const textResult = document.getElementById("textResult");
@@ -66,6 +61,7 @@ function carregarCsv(texto) {
     updatePdos();
   });
   spinnerPdo.addEventListener("change", updatePortos);
+
   updatePdos();
   updateSplitters();
   alert("Ficheiro carregado com sucesso!");
@@ -83,17 +79,16 @@ function updateSplitters() {
     spinnerSplitter.disabled = true;
     return;
   }
-  // Obter todos os splitters do SRO
+
   let splitters = csvData
     .filter(d => d["sro_nome"] === selectedSro && d["sro_splitter"])
     .map(d => d["sro_splitter"].split("_").slice(0,2).join("_")); // S4_x, S8_x, etc.
 
-  // Remover duplicados
   splitters = [...new Set(splitters)];
 
-  // Ordenar: S4, depois S8, depois S16, depois S32
+  // Ordenar: S4, S8, S16, S32
   const order = ["S4","S8","S16","S32"];
-  splitters.sort((a,b) => {
+  splitters.sort((a,b)=>{
     const prefixA = a.split("_")[0], prefixB = b.split("_")[0];
     if(prefixA !== prefixB) return order.indexOf(prefixA) - order.indexOf(prefixB);
     return parseInt(a.split("_")[1] || 0) - parseInt(b.split("_")[1] || 0);
@@ -143,17 +138,15 @@ btnPesquisar.addEventListener("click", ()=> {
       d["sro_secundario_pt"]
     );
 
-    // Organizar OUT SRO único
     const mapOut = {};
     results.forEach(r => {
       const out = r["sro_secundario_pt"];
       if(!mapOut[out]) mapOut[out] = r["id_servico"] ? "Ocupado" : "Livre";
-      // Se já estiver ocupado, mantém ocupado
     });
 
     const html = Object.keys(mapOut).sort((a,b)=>a.localeCompare(b)).map(out=>{
       const status = mapOut[out]==="Ocupado" ? `<span style="color:red">Ocupado</span>` : `<span style="color:green">Livre</span>`;
-      return `${out} - OUT SRO: ${out} - ${status}`;
+      return `OUT SRO: ${out} - ${status}`;
     }).join("<br>");
 
     textResult.innerHTML = `<b>=== RESULTADO ===</b><br>${html}`;
