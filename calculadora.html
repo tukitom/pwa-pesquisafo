@@ -7,14 +7,18 @@
 <link rel="stylesheet" href="styles.css">
 <style>
   /* === Estilo isolado da tabela === */
-  #tabelaFibra { overflow-x:auto; margin-top:40px; }
+  #tabelaFibra { overflow-x:auto; margin-top:40px; text-align:center; }
   #tabelaFibra table { border-collapse:collapse; margin:auto; box-shadow:0 0 6px rgba(0,0,0,0.1); }
   #tabelaFibra th, #tabelaFibra td {
     border:1px solid #ccc; padding:3px 5px; text-align:center; font-size:11px;
   }
   #tabelaFibra th { background:#fafafa; font-weight:bold; }
-  #tabelaFibra .fo { width:25px; font-weight:bold; }
-  #tabelaFibra .sigla { width:35px; font-weight:bold; }
+  #tabelaFibra .sigla { width:40px; font-weight:bold; background:#000; color:#fff; }
+  #btnPDF {
+    margin-top:20px; padding:8px 14px; border:none; background:#222; color:#fff;
+    border-radius:6px; cursor:pointer; font-size:13px;
+  }
+  #btnPDF:hover { background:#444; }
   @media (max-width:800px){
     #tabelaFibra table { font-size:9px; }
     #tabelaFibra th, #tabelaFibra td { padding:2px; }
@@ -37,10 +41,14 @@
   <button id="btnCalcularCor">Calcular</button>
   <div id="textCorResult" style="margin-top:20px;"></div>
 
-  <!-- TABELA COLORIDA -->
   <h3 style="margin-top:40px;">Tabela de Identificação de Fibras Ópticas (1–288)</h3>
   <div id="tabelaFibra"></div>
+  <button id="btnPDF">📄 Exportar PDF</button>
 </main>
+
+<!-- jsPDF para exportar -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 // === CALCULADORA (igual à sua original) ===
@@ -79,8 +87,8 @@ const cores = [
 ];
 
 function gerarTabela(){
-  let html = `<table><thead><tr><th class='fo'>FO</th><th class='sigla'>Sigla</th>`;
-  // Cabeçalho com números coloridos (cores dos tubos)
+  let html = `<table><thead><tr><th class='sigla'>Sigla</th>`;
+  // Cabeçalho colorido (1–24)
   for(let t=1;t<=24;t++){
     const corTubo = cores[(t-1)%12][1];
     const textColor = ["#000000","#8B4513","#800080","#808080","#0000FF","#FF0000"].includes(corTubo) ? "#fff" : "#000";
@@ -88,10 +96,10 @@ function gerarTabela(){
   }
   html += `</tr></thead><tbody>`;
 
-  // Linhas coloridas (cores das fibras)
+  // Linhas coloridas (cada fibra)
   for(let f=0;f<12;f++){
-    const [nome, corFibra, sigla] = cores[f];
-    html += `<tr><td>${f+1}</td><td>${sigla}</td>`;
+    const [_, corFibra, sigla] = cores[f];
+    html += `<tr><td class='sigla'>${sigla}</td>`;
     for(let t=1;t<=24;t++){
       const numero = (t - 1) * 12 + (f + 1);
       const textColor = ["#000000","#8B4513","#800080","#808080","#0000FF","#FF0000"].includes(corFibra) ? "#fff" : "#000";
@@ -103,6 +111,21 @@ function gerarTabela(){
   document.getElementById("tabelaFibra").innerHTML = html;
 }
 gerarTabela();
+
+// === EXPORTAR PARA PDF ===
+document.getElementById("btnPDF").addEventListener("click", async () => {
+  const { jsPDF } = window.jspdf;
+  const tabela = document.getElementById("tabelaFibra");
+  const canvas = await html2canvas(tabela);
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imgWidth = pageWidth - 40;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
+  pdf.save("Tabela_Fibras_Opticas.pdf");
+});
 </script>
 </body>
 </html>
