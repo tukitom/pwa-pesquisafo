@@ -61,35 +61,69 @@ function carregarCsv(texto) {
     updateSplitters();
   });
   spinnerPdo.addEventListener("change", updatePortos);
+  spinnerSplitter.addEventListener("change", onSplitterChange);
+  spinnerPdo.addEventListener("change", onPdoOrPortoChange);
+  spinnerPorto.addEventListener("change", onPdoOrPortoChange);
 
   updatePdos();
   updateSplitters();
   alert("Ficheiro carregado com sucesso!");
 }
 
+// === Alternância automática de modo ===
+function onSplitterChange() {
+  const splitter = spinnerSplitter.value;
+  if (splitter) {
+    // Ativa modo 2 (SRO + Splitter)
+    spinnerPdo.value = "";
+    spinnerPorto.value = "";
+    spinnerPdo.disabled = true;
+    spinnerPorto.disabled = true;
+  } else {
+    // Volta ao modo 1
+    spinnerPdo.disabled = false;
+    spinnerPorto.disabled = false;
+  }
+}
+
+function onPdoOrPortoChange() {
+  const pdo = spinnerPdo.value;
+  const porto = spinnerPorto.value;
+  if (pdo || porto) {
+    // Ativa modo 1 (SRO + PDO + PORTO)
+    spinnerSplitter.value = "";
+    spinnerSplitter.disabled = true;
+  } else {
+    spinnerSplitter.disabled = false;
+  }
+}
+
+// === Atualiza dropdowns ===
 function updatePdos() {
   const selectedSro = spinnerSro.value;
-  const pdos = selectedSro==="FastFiber" ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
-                                        : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
+  const pdos = selectedSro==="FastFiber"
+    ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
+    : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
+
   const pdosUnicos = [...new Set(pdos)].sort((a,b) => {
     const numA = parseInt(a.replace(/\D/g,'')) || 0;
     const numB = parseInt(b.replace(/\D/g,'')) || 0;
     return numA - numB;
   });
+
   spinnerPdo.innerHTML = pdosUnicos.map(p=>`<option>${p}</option>`).join("");
   updatePortos();
 }
 
 function updatePortos() {
   const selectedPdo = spinnerPdo.value;
-  if(!selectedPdo) return;
+  if(!selectedPdo) { spinnerPorto.innerHTML = ""; return; }
   const portos = csvData.filter(d=>d["pdo_nome"]===selectedPdo)
     .map(d=>d["porto_pdo"]).filter(Boolean)
     .sort((a,b)=>parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,'')));
   spinnerPorto.innerHTML = [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
 }
 
-// === Splitters ===
 function updateSplitters() {
   const selectedSro = spinnerSro.value;
   if (!selectedSro) { spinnerSplitter.innerHTML = ""; return; }
@@ -128,17 +162,13 @@ btnPesquisar.addEventListener("click", ()=> {
 
   if(!sro){ alert("Seleciona um SRO."); return; }
 
-  // --- modo 1: SRO + PDO + PORTO (original) ---
+  // --- modo 1: SRO + PDO + PORTO ---
   if(pdo && porto && !splitter){
-    spinnerSplitter.disabled = true;
-    spinnerPdo.disabled = false;
-    spinnerPorto.disabled = false;
-
     const results = csvData.filter(d=>
       ((d["sro_nome"]===sro)||(sro==="FastFiber"&&!d["sro_nome"])) &&
       d["pdo_nome"]===pdo && d["porto_pdo"]===porto
     );
-    if(!results.length){ textResult.innerHTML="Nenhuma linha encontrada para os valores indicados."; return; }
+    if(!results.length){ textResult.innerHTML="Nenhuma linha encontrada."; return; }
 
     const fibraColors={1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"};
     const tuboColors={...fibraColors};
@@ -166,22 +196,14 @@ btnPesquisar.addEventListener("click", ()=> {
 
   // --- modo 2: SRO + Splitter ---
   if(splitter && !pdo && !porto){
-    spinnerSplitter.disabled = false;
-    spinnerPdo.disabled = true;
-    spinnerPorto.disabled = true;
-
     const rowsForSro = sro === "FastFiber" ? csvData.filter(d => !d["sro_nome"]) : csvData.filter(d => d["sro_nome"] === sro);
     const matched = rowsForSro.filter(d => (d["sro_splitter"] || "").startsWith(splitter));
-    if (!matched.length) { textResult.innerHTML = "Nenhuma linha encontrada para os valores indicados."; return; }
+    if (!matched.length) { textResult.innerHTML = "Nenhuma linha encontrada."; return; }
 
     const outStatus = {};
     matched.forEach(r => {
       const out = r["sro_secundario_pt"];
       if (!out) return;
-      if (sro === "FastFiber") {
-        outStatus[out] = "N/A";
-        return;
-      }
       const hasService = r["id_servico"] && r["id_servico"].trim() !== "";
       if (!outStatus[out]) outStatus[out] = hasService ? "Ocupado" : "Livre";
       else if (outStatus[out] === "Livre" && hasService) outStatus[out] = "Ocupado";
@@ -194,9 +216,8 @@ btnPesquisar.addEventListener("click", ()=> {
 
     const html = outs.map(out=>{
       const st = outStatus[out];
-      if(st==="N/A") return `OUT SRO: ${out} - <span style="color:gray">N/A</span>`;
       if(st==="Ocupado") return `OUT SRO: ${out} - <span style="color:red">Ocupado</span>`;
-      return `OUT SRO: ${out} - <span style="color:green">Livre</span>`;
+      return `OUT SRO: ${out} - <span style="color:lime">Livre</span>`;
     }).join("<br>");
 
     textResult.innerHTML = `<b>=== RESULTADO ===</b><br>${html}`;
