@@ -74,7 +74,6 @@ function carregarCsv(texto) {
 
 function updateSplitters() {
   const selectedSro = spinnerSro.value;
-  // default option
   let options = [`<option value="">-- (opcional) --</option>`];
 
   if (!selectedSro) {
@@ -84,7 +83,6 @@ function updateSplitters() {
   }
 
   if (selectedSro === "FastFiber") {
-    // FastFiber doesn't have splitters — mostrar N/A e desativar para evitar seleção
     options = [`<option value="N/A">N/A</option>`];
     spinnerSplitter.innerHTML = options.join("");
     spinnerSplitter.disabled = true;
@@ -97,7 +95,6 @@ function updateSplitters() {
     .filter(Boolean);
 
   const unique = [...new Set(splitters)].sort((a,b) => {
-    // tentar ordenar numericamente se possível
     const na = parseInt(a.replace(/\D/g,'')) || 0;
     const nb = parseInt(b.replace(/\D/g,'')) || 0;
     return na - nb || a.localeCompare(b);
@@ -139,13 +136,26 @@ btnPesquisar.addEventListener("click", ()=> {
   const sro=spinnerSro.value, pdo=spinnerPdo.value, porto=spinnerPorto.value, splitter=spinnerSplitter.value;
   if(!sro){ alert("Selecione o SRO."); return; }
 
-  const results = csvData.filter(d=>((d["sro_nome"]===sro)||(sro==="FastFiber"&&!d["sro_nome"])) && 
-                                    (splitter ? d["sro_splitter"] === splitter : true) &&
-                                    (pdo ? d["pdo_nome"] === pdo : true) &&
-                                    (porto ? d["porto_pdo"] === porto : true));
-  if(!results.length){ textResult.innerHTML="Nenhuma linha encontrada para os valores indicados."; return; }
+  // Lógica de filtragem com condições para SRO, Splitter, PDO e Porto
+  let results = [];
 
-  // Mostra os resultados na tela com as cores e estados
+  if (splitter) {
+    // Buscar resultados para SRO e Splitter (sem PDO e Porto)
+    results = csvData.filter(d => d["sro_nome"] === sro && d["sro_splitter"] === splitter);
+    results = results.filter(d => d["sro_secundario_pt"]); // Filtrar "OUT SRO" do armário
+    results = results.sort((a, b) => (a["sro_secundario_pt"] || "").localeCompare(b["sro_secundario_pt"]));
+  } else {
+    // Buscar resultados para SRO + PDO + Porto (com base no comportamento original)
+    results = csvData.filter(d => 
+      (d["sro_nome"] === sro || (sro === "FastFiber" && !d["sro_nome"])) &&
+      (pdo ? d["pdo_nome"] === pdo : true) &&
+      (porto ? d["porto_pdo"] === porto : true)
+    );
+  }
+
+  if (!results.length) { textResult.innerHTML = "Nenhuma linha encontrada para os valores indicados."; return; }
+
+  // Exibição dos resultados com as cores para "Livre", "Ocupado" e "N/A"
   const fibraColors = {
     1:"#FFFFFF", 2:"#FF0000", 3:"#00FF00", 4:"#0000FF", 5:"#000000", 6:"#FFFF00", 7:"#FFA500",
     8:"#808080", 9:"#8B4513", 10:"#800080", 11:"#FFC0CB", 12:"#40E0D0"
@@ -154,7 +164,7 @@ btnPesquisar.addEventListener("click", ()=> {
   
   const html = results.map(row => {
     let res = "<b>=== RESULTADO ===</b><br>";
-    for(const col of requiredCols){
+    for (const col of requiredCols) {
       const valor = row[col] || "", displayName = DISPLAY_NAMES[col];
       if (col === "pdo_ptfo") {
         const numeroFibra = parseInt(valor) || 0;
@@ -162,26 +172,15 @@ btnPesquisar.addEventListener("click", ()=> {
           const corIndexFibra = ((numeroFibra - 1) % 12) + 1;
           const corFibra = fibraColors[corIndexFibra] || "#FFF";
           const tubo = Math.floor((numeroFibra - 1) / 12) + 1;
-          const corTubo = tuboColors[((tubo - 1) % 12) + 1] || "#FFF";
-          res += `${displayName}: ${valor} <font color='${corFibra}'>●</font> (Tubo ${tubo} <font color='${corTubo}'>●</font>)<br>`;
-        } else {
-          res += `${displayName}: ${valor}<br>`;
+          const corTubo = tuboColors[((tubo - 1) % 12)] || "#FFF";
+          res += `<span style="color:${corFibra};">${valor}</span> <span style="color:${corTubo};">${tubo}</span><br>`;
         }
-      } else if (col === "estado_operacional_porto") {
-        const estado = row[col] || "";
-        let cor = "green";
-        let textoEstado = "Livre";
-        if (estado === "Ocupado") {
-          cor = "red";
-          textoEstado = "Ocupado";
-        }
-        res += `${displayName}: <font color="${cor}">${textoEstado}</font><br>`;
       } else {
         res += `${displayName}: ${valor}<br>`;
       }
     }
     return res;
-  }).join("<br>");
+  });
 
-  textResult.innerHTML = html;
+  textResult.innerHTML = html.join("");
 });
