@@ -17,6 +17,7 @@ const requiredCols = Object.keys(DISPLAY_NAMES);
 const btnLoadCsv = document.getElementById("btnLoadCsv");
 const btnPesquisar = document.getElementById("btnPesquisar");
 const spinnerSro = document.getElementById("spinnerSro");
+const spinnerSplitter = document.getElementById("spinnerSplitter");
 const spinnerPdo = document.getElementById("spinnerPdo");
 const spinnerPorto = document.getElementById("spinnerPorto");
 const textResult = document.getElementById("textResult");
@@ -53,62 +54,97 @@ function carregarCsv(texto) {
 
   const sros = [...new Set(csvData.map(d => d["sro_nome"]).filter(Boolean))].sort();
   if (csvData.some(d=>!d["sro_nome"])) sros.unshift("FastFiber");
-  spinnerSro.innerHTML = sros.map(s => `<option>${s}</option>`).join("");
+  spinnerSro.innerHTML = sros.map(s => `<option value="${s}">${s}</option>`).join("");
 
-  spinnerSro.addEventListener("change", updatePdos);
+  // set default for splitter/pdo/porto
+  spinnerSplitter.innerHTML = `<option value="">-- (opcional) --</option>`;
+  spinnerPdo.innerHTML = `<option value="">-- (opcional) --</option>`;
+  spinnerPorto.innerHTML = `<option value="">-- (opcional) --</option>`;
+
+  spinnerSro.addEventListener("change", () => {
+    updateSplitters();
+    updatePdos();
+  });
   spinnerPdo.addEventListener("change", updatePortos);
+
+  updateSplitters();
   updatePdos();
   alert("Ficheiro carregado com sucesso!");
 }
 
+function updateSplitters() {
+  const selectedSro = spinnerSro.value;
+  // default option
+  let options = [`<option value="">-- (opcional) --</option>`];
+
+  if (!selectedSro) {
+    spinnerSplitter.innerHTML = options.join("");
+    spinnerSplitter.disabled = false;
+    return;
+  }
+
+  if (selectedSro === "FastFiber") {
+    // FastFiber doesn't have splitters — mostrar N/A e desativar para evitar seleção
+    options = [`<option value="N/A">N/A</option>`];
+    spinnerSplitter.innerHTML = options.join("");
+    spinnerSplitter.disabled = true;
+    return;
+  }
+
+  const splitters = csvData
+    .filter(d => d["sro_nome"] === selectedSro)
+    .map(d => d["sro_splitter"])
+    .filter(Boolean);
+
+  const unique = [...new Set(splitters)].sort((a,b) => {
+    // tentar ordenar numericamente se possível
+    const na = parseInt(a.replace(/\D/g,'')) || 0;
+    const nb = parseInt(b.replace(/\D/g,'')) || 0;
+    return na - nb || a.localeCompare(b);
+  });
+
+  options = [`<option value="">-- (opcional) --</option>`].concat(unique.map(s => `<option value="${s}">${s}</option>`));
+  spinnerSplitter.innerHTML = options.join("");
+  spinnerSplitter.disabled = false;
+}
+
 function updatePdos() {
   const selectedSro = spinnerSro.value;
-  const pdos = selectedSro==="FastFiber" ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
-                                        : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
+  const pdos = selectedSro==="FastFiber"
+    ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
+    : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
   const pdosUnicos = [...new Set(pdos)].sort((a,b) => {
-    const numA = parseInt(a.replace(/\D/g,'')) || 0;
-    const numB = parseInt(b.replace(/\D/g,'')) || 0;
-    return numA - numB;
+    const numA = parseInt((a||"").replace(/\D/g,'')) || 0;
+    const numB = parseInt((b||"").replace(/\D/g,'')) || 0;
+    return numA - numB || (a||"").localeCompare(b||"");
   });
-  spinnerPdo.innerHTML = pdosUnicos.map(p=>`<option>${p}</option>`).join("");
+  spinnerPdo.innerHTML = `<option value="">-- (opcional) --</option>` + pdosUnicos.map(p=>`<option value="${p}">${p}</option>`).join("");
   updatePortos();
 }
 
 function updatePortos() {
   const selectedPdo = spinnerPdo.value;
-  if(!selectedPdo) return;
+  if(!selectedPdo){
+    spinnerPorto.innerHTML = `<option value="">-- (opcional) --</option>`;
+    return;
+  }
   const portos = csvData.filter(d=>d["pdo_nome"]===selectedPdo)
     .map(d=>d["porto_pdo"]).filter(Boolean)
-    .sort((a,b)=>parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,'')));
-  spinnerPorto.innerHTML = [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
+    .sort((a,b)=>parseInt((a||"").replace(/\D/g,''))-parseInt((b||"").replace(/\D/g,'')));
+  spinnerPorto.innerHTML = `<option value="">-- (opcional) --</option>` + [...new Set(portos)].map(p=>`<option value="${p}">${p}</option>`).join("");
 }
 
 btnPesquisar.addEventListener("click", ()=> {
   if(!csvData.length){ alert("Carrega primeiro um ficheiro CSV."); return; }
-  const sro=spinnerSro.value, pdo=spinnerPdo.value, porto=spinnerPorto.value;
-  if(!pdo||!porto){ alert("Seleciona PDO e Porto."); return; }
+  const sro=spinnerSro.value, pdo=spinnerPdo.value, porto=spinnerPorto.value, splitter=spinnerSplitter.value;
+  if(!sro){ alert("Selecione o SRO."); return; }
 
-  const results = csvData.filter(d=>((d["sro_nome"]===sro)||(sro==="FastFiber"&&!d["sro_nome"]))&&d["pdo_nome"]===pdo&&d["porto_pdo"]===porto);
+  const results = csvData.filter(d=>((d["sro_nome"]===sro)||(sro==="FastFiber"&&!d["sro_nome"])) && 
+                                    (splitter ? d["sro_splitter"] === splitter : true) &&
+                                    (pdo ? d["pdo_nome"] === pdo : true) &&
+                                    (porto ? d["porto_pdo"] === porto : true));
+
   if(!results.length){ textResult.innerHTML="Nenhuma linha encontrada para os valores indicados."; return; }
 
-  const fibraColors={1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"};
-  const tuboColors={...fibraColors};
-  const html = results.map(row=>{
-    let res="<b>=== RESULTADO ===</b><br>";
-    for(const col of requiredCols){
-      const valor=row[col]||"", displayName=DISPLAY_NAMES[col];
-      if(col==="pdo_ptfo"){
-        const numeroFibra=parseInt(valor)||0;
-        if(numeroFibra>0){
-          const corIndexFibra=((numeroFibra-1)%12)+1;
-          const corFibra=fibraColors[corIndexFibra]||"#FFF";
-          const tubo=Math.floor((numeroFibra-1)/12)+1;
-          const corTubo=tuboColors[((tubo-1)%12)+1]||"#FFF";
-          res+=`${displayName}: ${valor} <font color='${corFibra}'>●</font> (Tubo ${tubo} <font color='${corTubo}'>●</font>)<br>`;
-        } else res+=`${displayName}: ${valor}<br>`;
-      } else res+=`${displayName}: ${valor}<br>`;
-    }
-    return res;
-  }).join("<br>");
-  textResult.innerHTML=html;
-});
+  const html = results.map(row => {
+    let res="<
