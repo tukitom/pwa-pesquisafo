@@ -1,10 +1,10 @@
 const DISPLAY_NAMES = {
-  id_servico: "ID do Serviço",
+  id_servico: "ID do Servi�o",
   sro_nome: "SRO",
   sro_splitter: "Splitter No SRO",
   sro_secundario_pt: "OUT SRO",
   pdo_nome: "PDO",
-  pdo_ptfo: "Número da Fibra(PDO)",
+  pdo_ptfo: "N�mero da Fibra(PDO)",
   pdo_splitter: "Splitter No PDO",
   porto_pdo: "Porto",
   estado_operacional_porto: "Estado Porto",
@@ -27,7 +27,7 @@ const textFileName = document.getElementById("textFileName");
 btnLoadCsv.addEventListener("change", event => {
   const file = event.target.files[0];
   if (!file) return;
-  textFileName.textContent = `📄 ${file.name}`;
+  textFileName.textContent = `?? ${file.name}`;
   const reader = new FileReader();
   reader.onload = e => carregarCsv(e.target.result);
   reader.readAsText(file);
@@ -67,7 +67,7 @@ function carregarCsv(texto) {
   alert("Ficheiro carregado com sucesso!");
 }
 
-// === Atualiza Splitters com ordenação pelo número após "_" ===
+// === Atualiza Splitters com S4_x, S8_x, S16_x, S32_x ===
 function updateSplitters() {
   const selectedSro = spinnerSro.value;
   let options = [`<option value="">-- (opcional) --</option>`];
@@ -85,14 +85,16 @@ function updateSplitters() {
     return;
   }
 
+  // Obter splitters do SRO selecionado
   const splitters = csvData
     .filter(d => d["sro_nome"] === selectedSro)
     .map(d => d["sro_splitter"])
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(s => s.split("_").slice(0,2).join("_")); // pega S4_x, S8_x, etc.
 
   const uniqueSplitters = [...new Set(splitters)];
 
-  // Ordenar numericamente pelo número após "_"
+  // Ordenar numericamente pelo n�mero ap�s "_"
   uniqueSplitters.sort((a, b) => {
     const numA = parseInt(a.split("_")[1]) || 0;
     const numB = parseInt(b.split("_")[1]) || 0;
@@ -133,38 +135,46 @@ function updatePortos() {
   spinnerPorto.innerHTML = `<option value="">-- (opcional) --</option>` + [...new Set(portos)].map(p=>`<option value="${p}">${p}</option>`).join("");
 }
 
-// === Botão Pesquisar ===
+// === Bot�o Pesquisar ===
 btnPesquisar.addEventListener("click", ()=> {
   if(!csvData.length){ alert("Carrega primeiro um ficheiro CSV."); return; }
-  const sro=spinnerSro.value, pdo=spinnerPdo.value, porto=spinnerPorto.value, splitter=spinnerSplitter.value;
+  const sro = spinnerSro.value, pdo = spinnerPdo.value, porto = spinnerPorto.value, splitter = spinnerSplitter.value;
   if(!sro){ alert("Selecione o SRO."); return; }
 
   let results = [];
 
-  if (splitter) {
-    // Busca para SRO + Splitter (ignora PDO e Porto)
+  if (splitter && splitter !== "N/A") {
+    // Busca somente SRO + Splitter
     results = csvData.filter(d => 
-      d["sro_nome"] === sro && 
-      d["sro_splitter"] === splitter &&
+      d["sro_nome"] === sro &&
+      d["sro_splitter"]?.startsWith(splitter) &&
       d["sro_secundario_pt"]
     );
-    results = results.sort((a, b) => (a["sro_secundario_pt"] || "").localeCompare(b["sro_secundario_pt"]));
-  } else {
-    // Busca para SRO + PDO + Porto (comportamento original)
-    if(!pdo||!porto){ alert("Seleciona PDO e Porto."); return; }
-    results = csvData.filter(d => 
-      (d["sro_nome"] === sro || (sro === "FastFiber" && !d["sro_nome"])) &&
-      d["pdo_nome"] === pdo &&
-      d["porto_pdo"] === porto
-    );
+    results.sort((a,b) => (a["sro_secundario_pt"] || "").localeCompare(b["sro_secundario_pt"]));
+
+    // Montar HTML com OUT SRO + Ocupado/Livre
+    const html = results.map(row => {
+      const out = row["sro_secundario_pt"];
+      const id = row["id_servico"];
+      const status = id ? `<span style="color:red">Ocupado</span>` : `<span style="color:green">Livre</span>`;
+      return `${out} - ${status}`;
+    }).join("<br>");
+    textResult.innerHTML = `<b>=== RESULTADO ===</b><br>${html}`;
+    return;
   }
+
+  // Caso contr�rio: SRO + PDO + Porto (comportamento original)
+  if(!pdo||!porto){ alert("Seleciona PDO e Porto."); return; }
+  results = csvData.filter(d => 
+    (d["sro_nome"] === sro || (sro === "FastFiber" && !d["sro_nome"])) &&
+    d["pdo_nome"] === pdo &&
+    d["porto_pdo"] === porto
+  );
 
   if (!results.length) { textResult.innerHTML = "Nenhuma linha encontrada para os valores indicados."; return; }
 
-  const fibraColors = {
-    1:"#FFFFFF", 2:"#FF0000", 3:"#00FF00", 4:"#0000FF", 5:"#000000", 6:"#FFFF00", 7:"#FFA500",
-    8:"#808080", 9:"#8B4513", 10:"#800080", 11:"#FFC0CB", 12:"#40E0D0"
-  };
+  const fibraColors = {1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",5:"#000000",6:"#FFFF00",7:"#FFA500",
+    8:"#808080",9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"};
   const tuboColors = { ...fibraColors };
 
   const html = results.map(row => {
@@ -178,16 +188,11 @@ btnPesquisar.addEventListener("click", ()=> {
           const corFibra = fibraColors[corIndexFibra] || "#FFF";
           const tubo = Math.floor((numeroFibra - 1) / 12) + 1;
           const corTubo = tuboColors[((tubo - 1) % 12)] || "#FFF";
-          res += `${displayName}: ${valor} <font color='${corFibra}'>●</font> (Tubo ${tubo} <font color='${corTubo}'>●</font>)<br>`;
-        } else {
-          res += `${displayName}: ${valor}<br>`;
-        }
-      } else {
-        res += `${displayName}: ${valor}<br>`;
-      }
+          res += `${displayName}: ${valor} <font color='${corFibra}'>?</font> (Tubo ${tubo} <font color='${corTubo}'>?</font>)<br>`;
+        } else res += `${displayName}: ${valor}<br>`;
+      } else res += `${displayName}: ${valor}<br>`;
     }
     return res;
   }).join("<br>");
-
   textResult.innerHTML = html;
 });
