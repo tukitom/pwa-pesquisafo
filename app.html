@@ -20,6 +20,15 @@
   <input type="file" id="btnLoadCsv" accept=".csv,.txt">
   <div id="textFileName">Nenhum ficheiro carregado</div>
 
+  <!-- NOVO: seletor de modo -->
+  <div class="spinner-row">
+    <label>Modo de Pesquisa:</label>
+    <select id="spinnerModo">
+      <option value="pdo">SRO + PDO + PORTO</option>
+      <option value="splitter">SRO + SPLITTER</option>
+    </select>
+  </div>
+
   <div class="spinner-row">
     <label>Escolher SRO:</label>
     <select id="spinnerSro"></select>
@@ -27,7 +36,7 @@
 
   <div class="spinner-row">
     <label>Escolher Splitter:</label>
-    <select id="spinnerSplitter"></select>
+    <select id="spinnerSplitter" disabled></select>
   </div>
 
   <div class="spinner-row">
