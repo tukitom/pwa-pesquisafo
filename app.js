@@ -143,9 +143,45 @@ btnPesquisar.addEventListener("click", ()=> {
                                     (splitter ? d["sro_splitter"] === splitter : true) &&
                                     (pdo ? d["pdo_nome"] === pdo : true) &&
                                     (porto ? d["porto_pdo"] === porto : true));
-
   if(!results.length){ textResult.innerHTML="Nenhuma linha encontrada para os valores indicados."; return; }
 
-  // Mostra os resultados na tela
-  textResult.innerHTML = `<pre>${JSON.stringify(results, null, 2)}</pre>`;
+  // Mostra os resultados na tela com as cores e estados
+  const fibraColors = {
+    1:"#FFFFFF", 2:"#FF0000", 3:"#00FF00", 4:"#0000FF", 5:"#000000", 6:"#FFFF00", 7:"#FFA500",
+    8:"#808080", 9:"#8B4513", 10:"#800080", 11:"#FFC0CB", 12:"#40E0D0"
+  };
+  const tuboColors = { ...fibraColors };
+  
+  const html = results.map(row => {
+    let res = "<b>=== RESULTADO ===</b><br>";
+    for(const col of requiredCols){
+      const valor = row[col] || "", displayName = DISPLAY_NAMES[col];
+      if (col === "pdo_ptfo") {
+        const numeroFibra = parseInt(valor) || 0;
+        if (numeroFibra > 0) {
+          const corIndexFibra = ((numeroFibra - 1) % 12) + 1;
+          const corFibra = fibraColors[corIndexFibra] || "#FFF";
+          const tubo = Math.floor((numeroFibra - 1) / 12) + 1;
+          const corTubo = tuboColors[((tubo - 1) % 12) + 1] || "#FFF";
+          res += `${displayName}: ${valor} <font color='${corFibra}'>●</font> (Tubo ${tubo} <font color='${corTubo}'>●</font>)<br>`;
+        } else {
+          res += `${displayName}: ${valor}<br>`;
+        }
+      } else if (col === "estado_operacional_porto") {
+        const estado = row[col] || "";
+        let cor = "green";
+        let textoEstado = "Livre";
+        if (estado === "Ocupado") {
+          cor = "red";
+          textoEstado = "Ocupado";
+        }
+        res += `${displayName}: <font color="${cor}">${textoEstado}</font><br>`;
+      } else {
+        res += `${displayName}: ${valor}<br>`;
+      }
+    }
+    return res;
+  }).join("<br>");
+
+  textResult.innerHTML = html;
 });
