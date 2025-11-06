@@ -146,5 +146,6 @@ btnPesquisar.addEventListener("click", ()=> {
 
   if(!results.length){ textResult.innerHTML="Nenhuma linha encontrada para os valores indicados."; return; }
 
-  const html = results.map(row => {
-    let res="<
+  // Mostra os resultados na tela
+  textResult.innerHTML = `<pre>${JSON.stringify(results, null, 2)}</pre>`;
+});
