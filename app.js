@@ -74,14 +74,19 @@ function carregarCsv(texto) {
 
   spinnerSro.addEventListener("change", handleSroChange);
   spinnerSplitter.addEventListener("change", handleSplitterSelection);
+  spinnerPdo.addEventListener("change", handlePdoSelection);
   spinnerPdo.addEventListener("change", updatePortos);
 
   handleSroChange();
   alert("Ficheiro carregado com sucesso!");
 }
 
+// === Quando muda o SRO ===
 function handleSroChange() {
   const selectedSro = spinnerSro.value;
+
+  // 🧹 Limpa resultados antigos ao mudar de SRO
+  textResult.innerHTML = "";
 
   // Sempre resetar tudo ao trocar o SRO
   spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
@@ -129,6 +134,30 @@ function handleSroChange() {
   spinnerSplitter.innerHTML += splittersUnicos.map(s=>`<option>${s}</option>`).join("");
 }
 
+// === Quando muda o PDO ===
+function handlePdoSelection() {
+  const pdo = spinnerPdo.value;
+  // Se escolher PDO, bloqueia Splitter (modo normal)
+  if (pdo) {
+    spinnerSplitter.disabled = true;
+  } else {
+    spinnerSplitter.disabled = false;
+  }
+}
+
+// === Quando muda o Splitter ===
+function handleSplitterSelection() {
+  const spl = spinnerSplitter.value;
+  if (spl) {
+    spinnerPdo.disabled = true;
+    spinnerPorto.disabled = true;
+  } else {
+    spinnerPdo.disabled = false;
+    spinnerPorto.disabled = false;
+  }
+}
+
+// === Atualiza portos ===
 function updatePortos() {
   const selectedPdo = spinnerPdo.value;
   if(!selectedPdo) {
@@ -140,17 +169,6 @@ function updatePortos() {
     .map(d=>d["porto_pdo"]).filter(Boolean)
     .sort((a,b)=>parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,'')));
   spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>` + [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
-}
-
-function handleSplitterSelection() {
-  const spl = spinnerSplitter.value;
-  if (spl) {
-    spinnerPdo.disabled = true;
-    spinnerPorto.disabled = true;
-  } else {
-    spinnerPdo.disabled = false;
-    spinnerPorto.disabled = false;
-  }
 }
 
 // === PESQUISA ===
@@ -166,11 +184,9 @@ btnPesquisar.addEventListener("click", ()=> {
 
   // --- MODO SRO + SPLITTER ---
   if (splitter) {
-    // 🔧 Correção: só apanha o splitter exato (ex: S4_1, mas não S4_10)
-    const regex = new RegExp(`^${splitter}(?:_|$)`, "i");
     const results = csvData.filter(d =>
       d["sro_nome"] === sro &&
-      regex.test(d["sro_splitter"] || "")
+      d["sro_splitter"]?.startsWith(splitter + "_")
     );
 
     if(!results.length){
@@ -187,14 +203,10 @@ btnPesquisar.addEventListener("click", ()=> {
     });
 
     let html = `<b>=== RESULTADO ===</b><br>`;
-    Object.keys(outMap)
-      .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
-      .forEach(out=>{
-        const status = outMap[out]
-          ? "<font color='red'>Ocupado</font>"
-          : "<font color='lime'>Livre</font>";
-        html += `OUT SRO: ${out} — ${status}<br>`;
-      });
+    Object.keys(outMap).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(out=>{
+      const status = outMap[out] ? "<font color='red'>Ocupado</font>" : "<font color='lime'>Livre</font>";
+      html += `OUT SRO: ${out} — ${status}<br>`;
+    });
 
     textResult.innerHTML = html;
     return;
