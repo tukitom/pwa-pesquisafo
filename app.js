@@ -23,6 +23,16 @@ const spinnerPorto = document.getElementById("spinnerPorto");
 const textResult = document.getElementById("textResult");
 const textFileName = document.getElementById("textFileName");
 
+// === Inicialização: spinners vazios antes do CSV ===
+function resetSpinners(emptyOnly = false) {
+  const vazio = emptyOnly ? "" : `<option value="">-- Selecionar --</option>`;
+  spinnerSro.innerHTML = vazio;
+  spinnerSplitter.innerHTML = vazio;
+  spinnerPdo.innerHTML = vazio;
+  spinnerPorto.innerHTML = vazio;
+}
+resetSpinners(true); // sem opções antes de carregar o ficheiro
+
 // === CSV ===
 btnLoadCsv.addEventListener("change", event => {
   const file = event.target.files[0];
@@ -52,17 +62,19 @@ function carregarCsv(texto) {
     return null;
   }).filter(Boolean);
 
+  // Preenche SROs
   const sros = [...new Set(csvData.map(d => d["sro_nome"]).filter(Boolean))].sort();
   if (csvData.some(d=>!d["sro_nome"])) sros.unshift("FastFiber");
-  spinnerSro.innerHTML = `<option value="">Selecionar</option>` + sros.map(s => `<option>${s}</option>`).join("");
+  spinnerSro.innerHTML = `<option value="">-- Selecionar --</option>` + sros.map(s => `<option>${s}</option>`).join("");
 
-  spinnerSplitter.innerHTML = `<option value="">Selecionar</option>`;
-  spinnerPdo.innerHTML = `<option value="">Selecionar</option>`;
-  spinnerPorto.innerHTML = `<option value="">Selecionar</option>`;
+  // Reset restantes
+  spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
   spinnerSro.addEventListener("change", handleSroChange);
-  spinnerPdo.addEventListener("change", updatePortos);
   spinnerSplitter.addEventListener("change", handleSplitterSelection);
+  spinnerPdo.addEventListener("change", updatePortos);
 
   handleSroChange();
   alert("Ficheiro carregado com sucesso!");
@@ -71,15 +83,15 @@ function carregarCsv(texto) {
 function handleSroChange() {
   const selectedSro = spinnerSro.value;
 
-  if (!selectedSro) {
-    spinnerSplitter.innerHTML = `<option value="">Selecionar</option>`;
-    spinnerPdo.innerHTML = `<option value="">Selecionar</option>`;
-    spinnerPorto.innerHTML = `<option value="">Selecionar</option>`;
-    spinnerSplitter.disabled = false;
-    spinnerPdo.disabled = false;
-    spinnerPorto.disabled = false;
-    return;
-  }
+  // Sempre resetar tudo ao trocar o SRO
+  spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerSplitter.disabled = false;
+  spinnerPdo.disabled = false;
+  spinnerPorto.disabled = false;
+
+  if (!selectedSro) return;
 
   // Preenche PDOs
   const pdos = selectedSro==="FastFiber"
@@ -91,11 +103,11 @@ function handleSroChange() {
     const numB = parseInt(b.replace(/\D/g,'')) || 0;
     return numA - numB;
   });
-  spinnerPdo.innerHTML = `<option value="">Selecionar</option>` + pdosUnicos.map(p=>`<option>${p}</option>`).join("");
+  spinnerPdo.innerHTML += pdosUnicos.map(p=>`<option>${p}</option>`).join("");
 
   updatePortos();
 
-  // Preenche Splitters (agrupados)
+  // Preenche Splitters do SRO
   const splitters = csvData
     .filter(d=>d["sro_nome"]===selectedSro && d["sro_splitter"])
     .map(d=>{
@@ -114,20 +126,20 @@ function handleSroChange() {
       return numA - numB;
     });
 
-  spinnerSplitter.innerHTML = `<option value="">Selecionar</option>` + splittersUnicos.map(s=>`<option>${s}</option>`).join("");
+  spinnerSplitter.innerHTML += splittersUnicos.map(s=>`<option>${s}</option>`).join("");
 }
 
 function updatePortos() {
   const selectedPdo = spinnerPdo.value;
   if(!selectedPdo) {
-    spinnerPorto.innerHTML = `<option value="">Selecionar</option>`;
+    spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
     return;
   }
 
   const portos = csvData.filter(d=>d["pdo_nome"]===selectedPdo)
     .map(d=>d["porto_pdo"]).filter(Boolean)
     .sort((a,b)=>parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,'')));
-  spinnerPorto.innerHTML = `<option value="">Selecionar</option>` + [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>` + [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
 }
 
 function handleSplitterSelection() {
@@ -141,6 +153,7 @@ function handleSplitterSelection() {
   }
 }
 
+// === PESQUISA ===
 btnPesquisar.addEventListener("click", ()=> {
   if(!csvData.length){ alert("Carrega primeiro um ficheiro CSV."); return; }
 
@@ -151,7 +164,7 @@ btnPesquisar.addEventListener("click", ()=> {
 
   if(!sro){ alert("Seleciona um SRO."); return; }
 
-  // --- MODO 2: SRO + SPLITTER ---
+  // --- MODO SRO + SPLITTER ---
   if (splitter) {
     const results = csvData.filter(d =>
       d["sro_nome"] === sro &&
@@ -181,7 +194,7 @@ btnPesquisar.addEventListener("click", ()=> {
     return;
   }
 
-  // --- MODO 1: SRO + PDO + PORTO ---
+  // --- MODO SRO + PDO + PORTO ---
   if(!pdo || !porto){
     alert("Seleciona PDO e Porto, ou escolhe um Splitter.");
     return;
