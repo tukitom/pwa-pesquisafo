@@ -166,9 +166,11 @@ btnPesquisar.addEventListener("click", ()=> {
 
   // --- MODO SRO + SPLITTER ---
   if (splitter) {
+    // 🔧 Correção: só apanha o splitter exato (ex: S4_1, mas não S4_10)
+    const regex = new RegExp(`^${splitter}(?:_|$)`, "i");
     const results = csvData.filter(d =>
       d["sro_nome"] === sro &&
-      d["sro_splitter"]?.startsWith(splitter)
+      regex.test(d["sro_splitter"] || "")
     );
 
     if(!results.length){
@@ -185,10 +187,14 @@ btnPesquisar.addEventListener("click", ()=> {
     });
 
     let html = `<b>=== RESULTADO ===</b><br>`;
-    Object.keys(outMap).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(out=>{
-      const status = outMap[out] ? "<font color='red'>Ocupado</font>" : "<font color='lime'>Livre</font>";
-      html += `OUT SRO: ${out} — ${status}<br>`;
-    });
+    Object.keys(outMap)
+      .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
+      .forEach(out=>{
+        const status = outMap[out]
+          ? "<font color='red'>Ocupado</font>"
+          : "<font color='lime'>Livre</font>";
+        html += `OUT SRO: ${out} — ${status}<br>`;
+      });
 
     textResult.innerHTML = html;
     return;
