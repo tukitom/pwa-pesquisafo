@@ -1,8 +1,14 @@
 const DISPLAY_NAMES = {
   id_servico: "ID do Serviço",
+
   sro_nome: "SRO",
   sro_splitter: "Splitter No SRO",
   sro_secundario_pt: "OUT SRO",
+
+  jso_nome: "JSO",
+  jso_splitter: "Splitter Na JSO",
+  jso_ptfo: "OUT JSO",
+
   pdo_nome: "PDO",
   pdo_ptfo: "Número da Fibra(PDO)",
   pdo_splitter: "Splitter No PDO",
@@ -16,24 +22,32 @@ const requiredCols = Object.keys(DISPLAY_NAMES);
 
 const btnLoadCsv = document.getElementById("btnLoadCsv");
 const btnPesquisar = document.getElementById("btnPesquisar");
+
 const spinnerSro = document.getElementById("spinnerSro");
 const spinnerSplitter = document.getElementById("spinnerSplitter");
+
+const spinnerJso = document.getElementById("spinnerJso");
+const spinnerJsoSplitter = document.getElementById("spinnerJsoSplitter");
+
 const spinnerPdo = document.getElementById("spinnerPdo");
 const spinnerPorto = document.getElementById("spinnerPorto");
+
 const textResult = document.getElementById("textResult");
 const textFileName = document.getElementById("textFileName");
 
-// === Inicialização: spinners vazios antes do CSV ===
+// ================= RESET =================
 function resetSpinners(emptyOnly = false) {
   const vazio = emptyOnly ? "" : `<option value="">-- Selecionar --</option>`;
   spinnerSro.innerHTML = vazio;
   spinnerSplitter.innerHTML = vazio;
+  spinnerJso.innerHTML = vazio;
+  spinnerJsoSplitter.innerHTML = vazio;
   spinnerPdo.innerHTML = vazio;
   spinnerPorto.innerHTML = vazio;
 }
-resetSpinners(true); // sem opções antes de carregar o ficheiro
+resetSpinners(true);
 
-// === CSV ===
+// ================= CSV =================
 btnLoadCsv.addEventListener("change", event => {
   const file = event.target.files[0];
   if (!file) return;
@@ -55,6 +69,7 @@ function carregarCsv(texto) {
 
   const separador = detectarSeparador(lines[0]);
   const headers = lines[0].split(separador);
+
   csvData = lines.slice(1).map(line => {
     const values = line.split(separador);
     if (values.length === headers.length)
@@ -62,65 +77,97 @@ function carregarCsv(texto) {
     return null;
   }).filter(Boolean);
 
-  // Preenche SROs
+  // SRO
   const sros = [...new Set(csvData.map(d => d["sro_nome"]).filter(Boolean))].sort();
-  if (csvData.some(d=>!d["sro_nome"])) sros.unshift("FastFiber");
-  spinnerSro.innerHTML = `<option value="">-- Selecionar --</option>` + sros.map(s => `<option>${s}</option>`).join("");
+  spinnerSro.innerHTML = `<option value="">-- Selecionar --</option>` +
+    sros.map(s => `<option>${s}</option>`).join("");
 
-  // Reset restantes
-  spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+  // JSO (apenas nomes que começam por "JSO")
+const jsos = [...new Set(
+  csvData
+    .map(d => d["jso_nome"])
+    .filter(j => j && j.toUpperCase().startsWith("JSO"))
+)].sort();
+
+spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
+  jsos.map(j => `<option>${j}</option>`).join("");
 
   spinnerSro.addEventListener("change", handleSroChange);
-  spinnerSplitter.addEventListener("change", handleSplitterSelection);
-  spinnerPdo.addEventListener("change", handlePdoSelection);
+  spinnerJso.addEventListener("change", handleJsoChange);
   spinnerPdo.addEventListener("change", updatePortos);
 
-  handleSroChange();
   alert("Ficheiro carregado com sucesso!");
 }
 
-// === Quando muda o SRO ===
+// ================= SRO =================
 function handleSroChange() {
   const selectedSro = spinnerSro.value;
 
-  // 🧹 Limpa resultados antigos ao mudar de SRO
-  textResult.innerHTML = "";
+  // bloqueio automático
+  if (selectedSro) spinnerJso.disabled = true;
+  else spinnerJso.disabled = false;
 
-  // Sempre resetar tudo ao trocar o SRO
   spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
   spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
   spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerSplitter.disabled = false;
-  spinnerPdo.disabled = false;
-  spinnerPorto.disabled = false;
 
   if (!selectedSro) return;
 
-  // Preenche PDOs
-  const pdos = selectedSro==="FastFiber"
-    ? csvData.filter(d=>!d["sro_nome"]).map(d=>d["pdo_nome"])
-    : csvData.filter(d=>d["sro_nome"]===selectedSro).map(d=>d["pdo_nome"]);
+  const pdos = csvData
+    .filter(d=>d["sro_nome"]===selectedSro)
+    .map(d=>d["pdo_nome"]);
 
   const pdosUnicos = [...new Set(pdos)].sort((a,b)=>{
     const numA = parseInt(a.replace(/\D/g,'')) || 0;
     const numB = parseInt(b.replace(/\D/g,'')) || 0;
     return numA - numB;
   });
+
   spinnerPdo.innerHTML += pdosUnicos.map(p=>`<option>${p}</option>`).join("");
 
-  updatePortos();
+  preencherSplitters(selectedSro, "sro_nome", "sro_splitter", spinnerSplitter);
+}
 
-  // Preenche Splitters do SRO
+// ================= JSO =================
+function handleJsoChange() {
+  const selectedJso = spinnerJso.value;
+
+  // bloqueio automático
+  if (selectedJso) spinnerSro.disabled = true;
+  else spinnerSro.disabled = false;
+
+  spinnerJsoSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+
+  if (!selectedJso) return;
+
+  const pdos = csvData
+    .filter(d=>d["jso_nome"]===selectedJso)
+    .map(d=>d["pdo_nome"]);
+
+  const pdosUnicos = [...new Set(pdos)].sort((a,b)=>{
+    const numA = parseInt(a.replace(/\D/g,'')) || 0;
+    const numB = parseInt(b.replace(/\D/g,'')) || 0;
+    return numA - numB;
+  });
+
+  spinnerPdo.innerHTML += pdosUnicos.map(p=>`<option>${p}</option>`).join("");
+
+  preencherSplitters(selectedJso, "jso_nome", "jso_splitter", spinnerJsoSplitter);
+}
+
+// ================= SPLITTERS =================
+function preencherSplitters(valor, campoNome, campoSplitter, spinner) {
   const splitters = csvData
-    .filter(d=>d["sro_nome"]===selectedSro && d["sro_splitter"])
+    .filter(d=>d[campoNome]===valor && d[campoSplitter])
     .map(d=>{
-      const match = d["sro_splitter"].match(/(S\d+_\d+)/);
-      return match ? match[1] : d["sro_splitter"];
+      const match = d[campoSplitter].match(/(S\d+_\d+)/);
+      return match ? match[1] : d[campoSplitter];
     });
 
   const ordem = { S4:1, S8:2, S16:3, S32:4 };
+
   const splittersUnicos = [...new Set(splitters)]
     .sort((a,b)=>{
       const tipoA = a.match(/S\d+/)?.[0] || "";
@@ -131,58 +178,87 @@ function handleSroChange() {
       return numA - numB;
     });
 
-  spinnerSplitter.innerHTML += splittersUnicos.map(s=>`<option>${s}</option>`).join("");
+  spinner.innerHTML += splittersUnicos.map(s=>`<option>${s}</option>`).join("");
 }
 
-// === Quando muda o PDO ===
-function handlePdoSelection() {
-  const pdo = spinnerPdo.value;
-  // Se escolher PDO, bloqueia Splitter (modo normal)
-  if (pdo) {
-    spinnerSplitter.disabled = true;
-  } else {
-    spinnerSplitter.disabled = false;
-  }
-}
-
-// === Quando muda o Splitter ===
-function handleSplitterSelection() {
-  const spl = spinnerSplitter.value;
-  if (spl) {
-    spinnerPdo.disabled = true;
-    spinnerPorto.disabled = true;
-  } else {
-    spinnerPdo.disabled = false;
-    spinnerPorto.disabled = false;
-  }
-}
-
-// === Atualiza portos ===
+// ================= PORTOS =================
 function updatePortos() {
   const selectedPdo = spinnerPdo.value;
-  if(!selectedPdo) {
-    spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
-    return;
-  }
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+  if(!selectedPdo) return;
 
   const portos = csvData.filter(d=>d["pdo_nome"]===selectedPdo)
     .map(d=>d["porto_pdo"]).filter(Boolean)
-    .sort((a,b)=>parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,'')));
-  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>` + [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
+    .sort((a,b)=>parseInt(a)-parseInt(b));
+
+  spinnerPorto.innerHTML += [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
 }
 
-// === PESQUISA ===
+// ================= PESQUISA =================
 btnPesquisar.addEventListener("click", ()=> {
-  if(!csvData.length){ alert("Carrega primeiro um ficheiro CSV."); return; }
 
   const sro = spinnerSro.value;
   const splitter = spinnerSplitter.value;
+
+  const jso = spinnerJso.value;
+  const jsoSplitter = spinnerJsoSplitter.value;
+
   const pdo = spinnerPdo.value;
   const porto = spinnerPorto.value;
 
-  if(!sro){ alert("Seleciona um SRO."); return; }
+  const fibraColors={
+    1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",
+    5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",
+    9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"
+  };
+  const tuboColors={...fibraColors};
 
-  // --- MODO SRO + SPLITTER ---
+  // --- JSO + SPLITTER ---
+  if (jsoSplitter) {
+    const results = csvData.filter(d =>
+      d["jso_nome"] === jso &&
+      d["jso_splitter"]?.startsWith(jsoSplitter + "_")
+    );
+
+    if(!results.length){
+      textResult.innerHTML = "Nenhuma linha encontrada para a JSO e Splitter selecionados.";
+      return;
+    }
+
+    const outMap = {};
+    results.forEach(d=>{
+      const out = d["jso_ptfo"];
+      const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
+      if (!outMap[out]) outMap[out] = ocupado;
+      else outMap[out] = outMap[out] || ocupado;
+    });
+
+    let html = `<b>=== RESULTADO JSO ===</b><br>`;
+
+    Object.keys(outMap)
+      .sort((a,b)=>parseInt(a)-parseInt(b))
+      .forEach(out=>{
+        const numeroFibra=parseInt(out)||0;
+        const corIndexFibra=((numeroFibra-1)%12)+1;
+        const corFibra=fibraColors[corIndexFibra]||"#FFF";
+        const tubo=Math.floor((numeroFibra-1)/12)+1;
+        const corTubo=tuboColors[((tubo-1)%12)+1]||"#FFF";
+
+        const status = outMap[out]
+          ? "<font color='red'>Ocupado</font>"
+          : "<font color='lime'>Livre</font>";
+
+        html += `OUT JSO: ${out} 
+        <font color="${corFibra}">●</font> 
+        (Tubo ${tubo} <font color="${corTubo}">●</font>) 
+        — ${status}<br>`;
+      });
+
+    textResult.innerHTML = html;
+    return;
+  }
+
+  // --- SRO + SPLITTER (ORIGINAL) ---
   if (splitter) {
     const results = csvData.filter(d =>
       d["sro_nome"] === sro &&
@@ -203,52 +279,62 @@ btnPesquisar.addEventListener("click", ()=> {
     });
 
     let html = `<b>=== RESULTADO ===</b><br>`;
-    Object.keys(outMap).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(out=>{
-      const status = outMap[out] ? "<font color='red'>Ocupado</font>" : "<font color='lime'>Livre</font>";
-      html += `OUT SRO: ${out} — ${status}<br>`;
-    });
+    Object.keys(outMap)
+      .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
+      .forEach(out=>{
+        const status = outMap[out]
+          ? "<font color='red'>Ocupado</font>"
+          : "<font color='lime'>Livre</font>";
+        html += `OUT SRO: ${out} — ${status}<br>`;
+      });
 
     textResult.innerHTML = html;
     return;
   }
 
-  // --- MODO SRO + PDO + PORTO ---
-  if(!pdo || !porto){
-    alert("Seleciona PDO e Porto, ou escolhe um Splitter.");
+  // --- MODO PDO ---
+  if (!pdo || !porto) {
+    alert("Seleciona PDO e Porto, ou escolhe um splitter.");
     return;
   }
 
   const results = csvData.filter(d =>
-    ((d["sro_nome"]===sro)||(sro==="FastFiber"&&!d["sro_nome"])) &&
     d["pdo_nome"]===pdo &&
     d["porto_pdo"]===porto
   );
 
   if(!results.length){
-    textResult.innerHTML = "Nenhuma linha encontrada para os valores indicados.";
+    textResult.innerHTML = "Nenhuma linha encontrada.";
     return;
   }
 
-  const fibraColors={1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"};
-  const tuboColors={...fibraColors};
+  let html = "<b>=== RESULTADO ===</b><br>";
 
-  const html = results.map(row=>{
-    let res = "<b>=== RESULTADO ===</b><br>";
+  results.forEach(row=>{
     for(const col of requiredCols){
       const valor = row[col] || "";
       const displayName = DISPLAY_NAMES[col];
-      if(col==="pdo_ptfo"){
+
+      if(col==="pdo_ptfo" || col==="jso_ptfo"){
         const numeroFibra=parseInt(valor)||0;
         if(numeroFibra>0){
           const corIndexFibra=((numeroFibra-1)%12)+1;
           const corFibra=fibraColors[corIndexFibra]||"#FFF";
           const tubo=Math.floor((numeroFibra-1)/12)+1;
           const corTubo=tuboColors[((tubo-1)%12)+1]||"#FFF";
-          res+=`${displayName}: ${valor} <font color="${corFibra}">●</font> (Tubo ${tubo} <font color="${corTubo}">●</font>)<br>`;
-        } else res+=`${displayName}: ${valor}<br>`;
-      } else res+=`${displayName}: ${valor}<br>`;
+
+          html+=`${displayName}: ${valor} 
+          <font color="${corFibra}">●</font> 
+          (Tubo ${tubo} <font color="${corTubo}">●</font>)<br>`;
+        } else {
+          html+=`${displayName}: ${valor}<br>`;
+        }
+      } else {
+        html+=`${displayName}: ${valor}<br>`;
+      }
     }
-    return res;
-  }).join("<br>");
+    html += "<br>";
+  });
+
   textResult.innerHTML = html;
 });
