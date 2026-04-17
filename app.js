@@ -82,15 +82,15 @@ function carregarCsv(texto) {
   spinnerSro.innerHTML = `<option value="">-- Selecionar --</option>` +
     sros.map(s => `<option>${s}</option>`).join("");
 
-  // JSO (apenas nomes que começam por "JSO")
-const jsos = [...new Set(
-  csvData
-    .map(d => d["jso_nome"])
-    .filter(j => j && j.toUpperCase().startsWith("JSO"))
-)].sort();
+  // JSO
+  const jsos = [...new Set(
+    csvData
+      .map(d => d["jso_nome"])
+      .filter(j => j && j.toUpperCase().startsWith("JSO"))
+  )].sort();
 
-spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
-  jsos.map(j => `<option>${j}</option>`).join("");
+  spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
+    jsos.map(j => `<option>${j}</option>`).join("");
 
   spinnerSro.addEventListener("change", handleSroChange);
   spinnerJso.addEventListener("change", handleJsoChange);
@@ -103,7 +103,6 @@ spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
 function handleSroChange() {
   const selectedSro = spinnerSro.value;
 
-  // bloqueio automático
   if (selectedSro) spinnerJso.disabled = true;
   else spinnerJso.disabled = false;
 
@@ -132,7 +131,6 @@ function handleSroChange() {
 function handleJsoChange() {
   const selectedJso = spinnerJso.value;
 
-  // bloqueio automático
   if (selectedJso) spinnerSro.disabled = true;
   else spinnerSro.disabled = false;
 
@@ -229,8 +227,15 @@ btnPesquisar.addEventListener("click", ()=> {
     results.forEach(d=>{
       const out = d["jso_ptfo"];
       const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
-      if (!outMap[out]) outMap[out] = ocupado;
-      else outMap[out] = outMap[out] || ocupado;
+
+      if (!outMap[out]) {
+        outMap[out] = {
+          ocupado: ocupado,
+          pdo: d["pdo_nome"]
+        };
+      } else {
+        outMap[out].ocupado = outMap[out].ocupado || ocupado;
+      }
     });
 
     let html = `<b>=== RESULTADO JSO ===</b><br>`;
@@ -244,11 +249,11 @@ btnPesquisar.addEventListener("click", ()=> {
         const tubo=Math.floor((numeroFibra-1)/12)+1;
         const corTubo=tuboColors[((tubo-1)%12)+1]||"#FFF";
 
-        const status = outMap[out]
+        const status = outMap[out].ocupado
           ? "<font color='red'>Ocupado</font>"
           : "<font color='lime'>Livre</font>";
 
-        html += `OUT JSO: ${out} 
+        html += `OUT JSO: ${out} (PDO: ${outMap[out].pdo}) 
         <font color="${corFibra}">●</font> 
         (Tubo ${tubo} <font color="${corTubo}">●</font>) 
         — ${status}<br>`;
@@ -258,7 +263,7 @@ btnPesquisar.addEventListener("click", ()=> {
     return;
   }
 
-  // --- SRO + SPLITTER (ORIGINAL) ---
+  // --- SRO + SPLITTER ---
   if (splitter) {
     const results = csvData.filter(d =>
       d["sro_nome"] === sro &&
@@ -274,18 +279,26 @@ btnPesquisar.addEventListener("click", ()=> {
     results.forEach(d=>{
       const out = d["sro_secundario_pt"];
       const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
-      if (!outMap[out]) outMap[out] = ocupado;
-      else outMap[out] = outMap[out] || ocupado;
+
+      if (!outMap[out]) {
+        outMap[out] = {
+          ocupado: ocupado,
+          pdo: d["pdo_nome"]
+        };
+      } else {
+        outMap[out].ocupado = outMap[out].ocupado || ocupado;
+      }
     });
 
     let html = `<b>=== RESULTADO ===</b><br>`;
     Object.keys(outMap)
       .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
       .forEach(out=>{
-        const status = outMap[out]
+        const status = outMap[out].ocupado
           ? "<font color='red'>Ocupado</font>"
           : "<font color='lime'>Livre</font>";
-        html += `OUT SRO: ${out} — ${status}<br>`;
+
+        html += `OUT SRO: ${out} (PDO: ${outMap[out].pdo}) — ${status}<br>`;
       });
 
     textResult.innerHTML = html;
