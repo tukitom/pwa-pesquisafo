@@ -112,15 +112,30 @@ document.getElementById("btnPDF").addEventListener("click", async () => {
   btn.disabled = true;
   try {
     const { jsPDF } = window.jspdf;
-    const tabela = document.getElementById("tabelaFibra");
-    const canvas = await html2canvas(tabela, { backgroundColor: "#1d2025" });
+    const tabela = document.querySelector("#tabelaFibra table");
+    // Captura a tabela na largura real (scrollWidth), não apenas a parte visível
+    // no ecrã — essencial em telemóveis, onde a tabela é mais larga que o viewport.
+    const canvas = await html2canvas(tabela, {
+      backgroundColor: "#1d2025",
+      scale: 2,
+      width: tabela.scrollWidth,
+      height: tabela.scrollHeight,
+      windowWidth: tabela.scrollWidth,
+      windowHeight: tabela.scrollHeight
+    });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = pageWidth - 40;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 20, 20, imgWidth, imgHeight);
+    const finalHeight = Math.min(imgHeight, pageHeight - 40);
+    const finalWidth = finalHeight === imgHeight ? imgWidth : (canvas.width * finalHeight) / canvas.height;
+    pdf.addImage(imgData, "PNG", 20, 20, finalWidth, finalHeight);
     pdf.save("Tabela_Fibras_Opticas.pdf");
+  } catch (e) {
+    alert("Não foi possível gerar o PDF. Tenta novamente.");
+    console.error(e);
   } finally {
     btn.textContent = original;
     btn.disabled = false;

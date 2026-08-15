@@ -25,6 +25,8 @@ const FIBRA_COLORS = {
 
 const HISTORY_KEY = "fo_pesquisa_historico";
 const HISTORY_MAX = 20;
+const CSV_STORAGE_KEY = "fo_csv_raw";
+const CSV_FILENAME_KEY = "fo_csv_filename";
 
 let csvData = [];
 const requiredCols = Object.keys(DISPLAY_NAMES);
@@ -56,6 +58,7 @@ const btnCopiar = document.getElementById("btnCopiar");
 const btnPartilhar = document.getElementById("btnPartilhar");
 const historyList = document.getElementById("historyList");
 const btnClearHistory = document.getElementById("btnClearHistory");
+const btnForgetCsv = document.getElementById("btnForgetCsv");
 
 let ultimoResultadoTexto = "";
 
@@ -82,12 +85,28 @@ btnLoadCsv.addEventListener("change", event => {
   textFileName.textContent = `📄 A carregar ${file.name}...`;
   textFileName.classList.remove("loaded");
   const reader = new FileReader();
-  reader.onload = e => carregarCsv(e.target.result, file.name);
+  reader.onload = e => carregarCsv(e.target.result, file.name, true);
   reader.onerror = () => {
     textFileName.textContent = "❌ Erro a ler o ficheiro.";
   };
   reader.readAsText(file, "UTF-8");
 });
+
+if (btnForgetCsv) {
+  btnForgetCsv.addEventListener("click", () => {
+    if (!confirm("Esquecer o ficheiro guardado neste dispositivo?")) return;
+    try {
+      localStorage.removeItem(CSV_STORAGE_KEY);
+      localStorage.removeItem(CSV_FILENAME_KEY);
+    } catch (e) {}
+    csvData = [];
+    construirIndices();
+    resetSpinners(false);
+    textFileName.textContent = "Nenhum ficheiro carregado";
+    textFileName.classList.remove("loaded");
+    btnForgetCsv.style.display = "none";
+  });
+}
 
 function detectarSeparador(linha) {
   if (linha.includes(";")) return ";";
@@ -95,7 +114,7 @@ function detectarSeparador(linha) {
   return ",";
 }
 
-function carregarCsv(texto, nomeFicheiro) {
+function carregarCsv(texto, nomeFicheiro, guardarLocal) {
   const lines = texto.split(/\r?\n/).filter(l => l.trim() !== "");
   if (!lines.length) { alert("Ficheiro CSV vazio!"); return; }
 
@@ -130,7 +149,35 @@ function carregarCsv(texto, nomeFicheiro) {
 
   textFileName.textContent = `✅ ${nomeFicheiro} — ${csvData.length} linhas carregadas`;
   textFileName.classList.add("loaded");
+
+  if (guardarLocal) {
+    try {
+      localStorage.setItem(CSV_STORAGE_KEY, texto);
+      localStorage.setItem(CSV_FILENAME_KEY, nomeFicheiro);
+      if (btnForgetCsv) btnForgetCsv.style.display = "inline-block";
+    } catch (e) {
+      // Ficheiro demasiado grande para guardar localmente — continua a funcionar só nesta sessão
+      console.warn("Não foi possível guardar o CSV localmente:", e);
+    }
+  }
 }
+
+// Restaurar automaticamente o último CSV carregado (útil em mobile, onde a app
+// é frequentemente recarregada e perderia o ficheiro em memória)
+(function restaurarCsvGuardado() {
+  try {
+    const guardado = localStorage.getItem(CSV_STORAGE_KEY);
+    const nome = localStorage.getItem(CSV_FILENAME_KEY) || "ficheiro guardado";
+    if (guardado) {
+      carregarCsv(guardado, nome, false);
+      textFileName.textContent = `✅ ${nome} — ${csvData.length} linhas (restaurado)`;
+      if (btnForgetCsv) btnForgetCsv.style.display = "inline-block";
+    }
+  } catch (e) {
+    // localStorage indisponível (ex: modo privado) — sem problema, segue sem restauro
+  }
+})();
+
 
 function construirIndices() {
   idx.bySro = new Map();
