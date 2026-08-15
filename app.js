@@ -17,8 +17,25 @@ const DISPLAY_NAMES = {
   beneficiario_porto: "Operadora"
 };
 
+const FIBRA_COLORS = {
+  1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",
+  5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",
+  9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"
+};
+
+const HISTORY_KEY = "fo_pesquisa_historico";
+const HISTORY_MAX = 20;
+
 let csvData = [];
 const requiredCols = Object.keys(DISPLAY_NAMES);
+
+// ---- Índices construídos ao carregar o CSV (pesquisa rápida mesmo com ficheiros grandes) ----
+let idx = {
+  bySro: new Map(),
+  byJso: new Map(),
+  byPdo: new Map(),
+  byPdoPorto: new Map()
+};
 
 const btnLoadCsv = document.getElementById("btnLoadCsv");
 const btnPesquisar = document.getElementById("btnPesquisar");
@@ -34,6 +51,13 @@ const spinnerPorto = document.getElementById("spinnerPorto");
 
 const textResult = document.getElementById("textResult");
 const textFileName = document.getElementById("textFileName");
+const resultActions = document.getElementById("resultActions");
+const btnCopiar = document.getElementById("btnCopiar");
+const btnPartilhar = document.getElementById("btnPartilhar");
+const historyList = document.getElementById("historyList");
+const btnClearHistory = document.getElementById("btnClearHistory");
+
+let ultimoResultadoTexto = "";
 
 // ================= RESET =================
 function resetSpinners(emptyOnly = false) {
@@ -47,13 +71,21 @@ function resetSpinners(emptyOnly = false) {
 }
 resetSpinners(true);
 
+spinnerSro.addEventListener("change", handleSroChange);
+spinnerJso.addEventListener("change", handleJsoChange);
+spinnerPdo.addEventListener("change", updatePortos);
+
 // ================= CSV =================
 btnLoadCsv.addEventListener("change", event => {
   const file = event.target.files[0];
   if (!file) return;
-  textFileName.textContent = `📄 ${file.name}`;
+  textFileName.textContent = `📄 A carregar ${file.name}...`;
+  textFileName.classList.remove("loaded");
   const reader = new FileReader();
-  reader.onload = e => carregarCsv(e.target.result);
+  reader.onload = e => carregarCsv(e.target.result, file.name);
+  reader.onerror = () => {
+    textFileName.textContent = "❌ Erro a ler o ficheiro.";
+  };
   reader.readAsText(file, "UTF-8");
 });
 
@@ -63,40 +95,81 @@ function detectarSeparador(linha) {
   return ",";
 }
 
-function carregarCsv(texto) {
+function carregarCsv(texto, nomeFicheiro) {
   const lines = texto.split(/\r?\n/).filter(l => l.trim() !== "");
   if (!lines.length) { alert("Ficheiro CSV vazio!"); return; }
 
   const separador = detectarSeparador(lines[0]);
-  const headers = lines[0].split(separador);
+  const headers = lines[0].split(separador).map(h => h.trim());
 
-  csvData = lines.slice(1).map(line => {
-    const values = line.split(separador);
-    if (values.length === headers.length)
-      return Object.fromEntries(headers.map((h,i)=>[h,values[i]]));
-    return null;
-  }).filter(Boolean);
+  csvData = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(separador);
+    if (values.length === headers.length) {
+      const row = {};
+      for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j];
+      csvData.push(row);
+    }
+  }
+
+  construirIndices();
+  resetSpinners(false);
 
   // SRO
-  const sros = [...new Set(csvData.map(d => d["sro_nome"]).filter(Boolean))].sort();
+  const sros = [...idx.bySro.keys()].sort();
   spinnerSro.innerHTML = `<option value="">-- Selecionar --</option>` +
     sros.map(s => `<option>${s}</option>`).join("");
 
   // JSO
-  const jsos = [...new Set(
-    csvData
-      .map(d => d["jso_nome"])
-      .filter(j => j && j.toUpperCase().startsWith("JSO"))
-  )].sort();
+  const jsos = [...idx.byJso.keys()]
+    .filter(j => j.toUpperCase().startsWith("JSO"))
+    .sort();
 
   spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
     jsos.map(j => `<option>${j}</option>`).join("");
 
-  spinnerSro.addEventListener("change", handleSroChange);
-  spinnerJso.addEventListener("change", handleJsoChange);
-  spinnerPdo.addEventListener("change", updatePortos);
+  textFileName.textContent = `✅ ${nomeFicheiro} — ${csvData.length} linhas carregadas`;
+  textFileName.classList.add("loaded");
+}
 
-  alert("Ficheiro carregado com sucesso!");
+function construirIndices() {
+  idx.bySro = new Map();
+  idx.byJso = new Map();
+  idx.byPdo = new Map();
+  idx.byPdoPorto = new Map();
+
+  for (const row of csvData) {
+    const sro = row["sro_nome"];
+    const jso = row["jso_nome"];
+    const pdo = row["pdo_nome"];
+    const porto = row["porto_pdo"];
+
+    if (sro) {
+      if (!idx.bySro.has(sro)) idx.bySro.set(sro, []);
+      idx.bySro.get(sro).push(row);
+    }
+    if (jso) {
+      if (!idx.byJso.has(jso)) idx.byJso.set(jso, []);
+      idx.byJso.get(jso).push(row);
+    }
+    if (pdo) {
+      if (!idx.byPdo.has(pdo)) idx.byPdo.set(pdo, []);
+      idx.byPdo.get(pdo).push(row);
+    }
+    if (pdo && porto) {
+      const key = pdo + "|||" + porto;
+      if (!idx.byPdoPorto.has(key)) idx.byPdoPorto.set(key, []);
+      idx.byPdoPorto.get(key).push(row);
+    }
+  }
+}
+
+function ordenarNumerico(lista) {
+  return lista.sort((a, b) => {
+    const numA = parseInt(String(a).replace(/\D/g, "")) || 0;
+    const numB = parseInt(String(b).replace(/\D/g, "")) || 0;
+    return numA - numB;
+  });
 }
 
 // ================= SRO =================
@@ -112,19 +185,12 @@ function handleSroChange() {
 
   if (!selectedSro) return;
 
-  const pdos = csvData
-    .filter(d=>d["sro_nome"]===selectedSro)
-    .map(d=>d["pdo_nome"]);
+  const rows = idx.bySro.get(selectedSro) || [];
+  const pdosUnicos = ordenarNumerico([...new Set(rows.map(d => d["pdo_nome"]).filter(Boolean))]);
 
-  const pdosUnicos = [...new Set(pdos)].sort((a,b)=>{
-    const numA = parseInt(a.replace(/\D/g,'')) || 0;
-    const numB = parseInt(b.replace(/\D/g,'')) || 0;
-    return numA - numB;
-  });
+  spinnerPdo.innerHTML += pdosUnicos.map(p => `<option>${p}</option>`).join("");
 
-  spinnerPdo.innerHTML += pdosUnicos.map(p=>`<option>${p}</option>`).join("");
-
-  preencherSplitters(selectedSro, "sro_nome", "sro_splitter", spinnerSplitter);
+  preencherSplitters(rows, "sro_splitter", spinnerSplitter);
 }
 
 // ================= JSO =================
@@ -140,60 +206,68 @@ function handleJsoChange() {
 
   if (!selectedJso) return;
 
-  const pdos = csvData
-    .filter(d=>d["jso_nome"]===selectedJso)
-    .map(d=>d["pdo_nome"]);
+  const rows = idx.byJso.get(selectedJso) || [];
+  const pdosUnicos = ordenarNumerico([...new Set(rows.map(d => d["pdo_nome"]).filter(Boolean))]);
 
-  const pdosUnicos = [...new Set(pdos)].sort((a,b)=>{
-    const numA = parseInt(a.replace(/\D/g,'')) || 0;
-    const numB = parseInt(b.replace(/\D/g,'')) || 0;
-    return numA - numB;
-  });
+  spinnerPdo.innerHTML += pdosUnicos.map(p => `<option>${p}</option>`).join("");
 
-  spinnerPdo.innerHTML += pdosUnicos.map(p=>`<option>${p}</option>`).join("");
-
-  preencherSplitters(selectedJso, "jso_nome", "jso_splitter", spinnerJsoSplitter);
+  preencherSplitters(rows, "jso_splitter", spinnerJsoSplitter);
 }
 
 // ================= SPLITTERS =================
-function preencherSplitters(valor, campoNome, campoSplitter, spinner) {
-  const splitters = csvData
-    .filter(d=>d[campoNome]===valor && d[campoSplitter])
-    .map(d=>{
+function preencherSplitters(rows, campoSplitter, spinner) {
+  const splitters = rows
+    .filter(d => d[campoSplitter])
+    .map(d => {
       const match = d[campoSplitter].match(/(S\d+_\d+)/);
       return match ? match[1] : d[campoSplitter];
     });
 
-  const ordem = { S4:1, S8:2, S16:3, S32:4 };
+  const ordem = { S4: 1, S8: 2, S16: 3, S32: 4 };
 
   const splittersUnicos = [...new Set(splitters)]
-    .sort((a,b)=>{
+    .sort((a, b) => {
       const tipoA = a.match(/S\d+/)?.[0] || "";
       const tipoB = b.match(/S\d+/)?.[0] || "";
-      if (ordem[tipoA] !== ordem[tipoB]) return ordem[tipoA]-ordem[tipoB];
-      const numA = parseInt(a.split("_")[1]||0);
-      const numB = parseInt(b.split("_")[1]||0);
+      if (ordem[tipoA] !== ordem[tipoB]) return (ordem[tipoA] || 99) - (ordem[tipoB] || 99);
+      const numA = parseInt(a.split("_")[1] || 0);
+      const numB = parseInt(b.split("_")[1] || 0);
       return numA - numB;
     });
 
-  spinner.innerHTML += splittersUnicos.map(s=>`<option>${s}</option>`).join("");
+  spinner.innerHTML += splittersUnicos.map(s => `<option>${s}</option>`).join("");
 }
 
 // ================= PORTOS =================
 function updatePortos() {
   const selectedPdo = spinnerPdo.value;
   spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
-  if(!selectedPdo) return;
+  if (!selectedPdo) return;
 
-  const portos = csvData.filter(d=>d["pdo_nome"]===selectedPdo)
-    .map(d=>d["porto_pdo"]).filter(Boolean)
-    .sort((a,b)=>parseInt(a)-parseInt(b));
+  const rows = idx.byPdo.get(selectedPdo) || [];
+  const portos = rows.map(d => d["porto_pdo"]).filter(Boolean)
+    .sort((a, b) => parseInt(a) - parseInt(b));
 
-  spinnerPorto.innerHTML += [...new Set(portos)].map(p=>`<option>${p}</option>`).join("");
+  spinnerPorto.innerHTML += [...new Set(portos)].map(p => `<option>${p}</option>`).join("");
+}
+
+function corFibraETubo(numeroStr) {
+  const numeroFibra = parseInt(numeroStr) || 0;
+  const corIndexFibra = ((numeroFibra - 1) % 12) + 1;
+  const corFibra = FIBRA_COLORS[corIndexFibra] || "#FFF";
+  const tubo = Math.floor((numeroFibra - 1) / 12) + 1;
+  const corTubo = FIBRA_COLORS[((tubo - 1) % 12) + 1] || "#FFF";
+  return { numeroFibra, corFibra, tubo, corTubo };
 }
 
 // ================= PESQUISA =================
-btnPesquisar.addEventListener("click", ()=> {
+btnPesquisar.addEventListener("click", () => executarPesquisa(true));
+
+function executarPesquisa(guardarHistorico) {
+  if (!csvData.length) {
+    alert("Carrega primeiro um ficheiro CSV.");
+    return;
+  }
 
   const sro = spinnerSro.value;
   const splitter = spinnerSplitter.value;
@@ -204,104 +278,99 @@ btnPesquisar.addEventListener("click", ()=> {
   const pdo = spinnerPdo.value;
   const porto = spinnerPorto.value;
 
-  const fibraColors={
-    1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",
-    5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",
-    9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"
-  };
-  const tuboColors={...fibraColors};
-
   // --- JSO + SPLITTER ---
   if (jsoSplitter) {
-    const results = csvData.filter(d =>
-      d["jso_nome"] === jso &&
+    const rows = (idx.byJso.get(jso) || []).filter(d =>
       d["jso_splitter"]?.startsWith(jsoSplitter + "_")
     );
 
-    if(!results.length){
-      textResult.innerHTML = "Nenhuma linha encontrada para a JSO e Splitter selecionados.";
+    if (!rows.length) {
+      mostrarResultado("Nenhuma linha encontrada para a JSO e Splitter selecionados.", "");
       return;
     }
 
     const outMap = {};
-    results.forEach(d=>{
+    rows.forEach(d => {
       const out = d["jso_ptfo"];
       const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
-
       if (!outMap[out]) {
-        outMap[out] = {
-          ocupado: ocupado,
-          pdo: d["pdo_nome"]
-        };
+        outMap[out] = { ocupado, pdo: d["pdo_nome"], porto: d["porto_pdo"] };
       } else {
         outMap[out].ocupado = outMap[out].ocupado || ocupado;
       }
     });
 
-    let html = `<b>=== RESULTADO JSO ===</b><br>`;
+    let html = `<div class="result-title">🔌 JSO ${jso} · Splitter ${jsoSplitter}</div>`;
+    let texto = `RESULTADO JSO ${jso} — Splitter ${jsoSplitter}\n`;
 
     Object.keys(outMap)
-      .sort((a,b)=>parseInt(a)-parseInt(b))
-      .forEach(out=>{
-        const numeroFibra=parseInt(out)||0;
-        const corIndexFibra=((numeroFibra-1)%12)+1;
-        const corFibra=fibraColors[corIndexFibra]||"#FFF";
-        const tubo=Math.floor((numeroFibra-1)/12)+1;
-        const corTubo=tuboColors[((tubo-1)%12)+1]||"#FFF";
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .forEach(out => {
+        const { corFibra, tubo, corTubo } = corFibraETubo(out);
+        const item = outMap[out];
+        const statusLabel = item.ocupado ? "Ocupado" : "Livre";
+        const statusClass = item.ocupado ? "badge-ocupado" : "badge-livre";
 
-        const status = outMap[out].ocupado
-          ? "<font color='red'>Ocupado</font>"
-          : "<font color='lime'>Livre</font>";
+        html += `<div class="result-item">`
+          + `<div class="result-header">OUT JSO ${out} <span class="dot" style="background:${corFibra}"></span> `
+          + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${tubo}</small> <span class="dot" style="background:${corTubo}"></span></div>`
+          + `<div class="result-badges"><span class="badge ${statusClass}">${statusLabel}</span></div>`
+          + `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${item.pdo}</span></div>`
+          + `<div class="kv-row"><span class="kv-label">Porto</span><span class="kv-value">${item.porto || "?"}</span></div>`
+          + `</div>`;
 
-        html += `OUT JSO: ${out} (PDO: ${outMap[out].pdo}) 
-        <font color="${corFibra}">●</font> 
-        (Tubo ${tubo} <font color="${corTubo}">●</font>) 
-        — ${status}<br>`;
+        texto += `OUT JSO ${out} | PDO ${item.pdo} | Porto ${item.porto || "?"} | ${statusLabel}\n`;
       });
 
-    textResult.innerHTML = html;
+    mostrarResultado(html, texto);
+    if (guardarHistorico) guardarNoHistorico(`JSO ${jso} · Splitter ${jsoSplitter}`, { jso, jsoSplitter });
     return;
   }
 
   // --- SRO + SPLITTER ---
   if (splitter) {
-    const results = csvData.filter(d =>
-      d["sro_nome"] === sro &&
+    const rows = (idx.bySro.get(sro) || []).filter(d =>
       d["sro_splitter"]?.startsWith(splitter + "_")
     );
 
-    if(!results.length){
-      textResult.innerHTML = "Nenhuma linha encontrada para o SRO e Splitter selecionados.";
+    if (!rows.length) {
+      mostrarResultado("Nenhuma linha encontrada para o SRO e Splitter selecionados.", "");
       return;
     }
 
     const outMap = {};
-    results.forEach(d=>{
+    rows.forEach(d => {
       const out = d["sro_secundario_pt"];
       const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
-
       if (!outMap[out]) {
-        outMap[out] = {
-          ocupado: ocupado,
-          pdo: d["pdo_nome"]
-        };
+        outMap[out] = { ocupado, pdo: d["pdo_nome"], porto: d["porto_pdo"] };
       } else {
         outMap[out].ocupado = outMap[out].ocupado || ocupado;
       }
     });
 
-    let html = `<b>=== RESULTADO ===</b><br>`;
-    Object.keys(outMap)
-      .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))
-      .forEach(out=>{
-        const status = outMap[out].ocupado
-          ? "<font color='red'>Ocupado</font>"
-          : "<font color='lime'>Livre</font>";
+    let html = `<div class="result-title">🔌 SRO ${sro} · Splitter ${splitter}</div>`;
+    let texto = `RESULTADO SRO ${sro} — Splitter ${splitter}\n`;
 
-        html += `OUT SRO: ${out} (PDO: ${outMap[out].pdo}) — ${status}<br>`;
+    Object.keys(outMap)
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .forEach(out => {
+        const item = outMap[out];
+        const statusLabel = item.ocupado ? "Ocupado" : "Livre";
+        const statusClass = item.ocupado ? "badge-ocupado" : "badge-livre";
+
+        html += `<div class="result-item">`
+          + `<div class="result-header">OUT SRO ${out}</div>`
+          + `<div class="result-badges"><span class="badge ${statusClass}">${statusLabel}</span></div>`
+          + `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${item.pdo}</span></div>`
+          + `<div class="kv-row"><span class="kv-label">Porto</span><span class="kv-value">${item.porto || "?"}</span></div>`
+          + `</div>`;
+
+        texto += `OUT SRO ${out} | PDO ${item.pdo} | Porto ${item.porto || "?"} | ${statusLabel}\n`;
       });
 
-    textResult.innerHTML = html;
+    mostrarResultado(html, texto);
+    if (guardarHistorico) guardarNoHistorico(`SRO ${sro} · Splitter ${splitter}`, { sro, splitter });
     return;
   }
 
@@ -311,43 +380,186 @@ btnPesquisar.addEventListener("click", ()=> {
     return;
   }
 
-  const results = csvData.filter(d =>
-    d["pdo_nome"]===pdo &&
-    d["porto_pdo"]===porto
-  );
+  const rows = idx.byPdoPorto.get(pdo + "|||" + porto) || [];
 
-  if(!results.length){
-    textResult.innerHTML = "Nenhuma linha encontrada.";
+  if (!rows.length) {
+    mostrarResultado("Nenhuma linha encontrada.", "");
     return;
   }
 
-  let html = "<b>=== RESULTADO ===</b><br>";
+  let html = `<div class="result-title">📦 PDO ${pdo} · Porto ${porto}</div>`;
+  let texto = "RESULTADO\n";
 
-  results.forEach(row=>{
-    for(const col of requiredCols){
-      const valor = row[col] || "";
-      const displayName = DISPLAY_NAMES[col];
+  const otherFieldsSro = ["id_servico", "sro_nome", "sro_splitter", "sro_secundario_pt", "pdo_splitter"];
+  const otherFieldsJso = ["id_servico", "jso_nome", "jso_splitter", "jso_ptfo", "pdo_splitter"];
 
-      if(col==="pdo_ptfo" || col==="jso_ptfo"){
-        const numeroFibra=parseInt(valor)||0;
-        if(numeroFibra>0){
-          const corIndexFibra=((numeroFibra-1)%12)+1;
-          const corFibra=fibraColors[corIndexFibra]||"#FFF";
-          const tubo=Math.floor((numeroFibra-1)/12)+1;
-          const corTubo=tuboColors[((tubo-1)%12)+1]||"#FFF";
+  rows.forEach(row => {
+    const ocupado = row["id_servico"] && row["id_servico"].trim() !== "";
+    const statusLabel = ocupado ? "Ocupado" : "Livre";
+    const statusClass = ocupado ? "badge-ocupado" : "badge-livre";
 
-          html+=`${displayName}: ${valor} 
-          <font color="${corFibra}">●</font> 
-          (Tubo ${tubo} <font color="${corTubo}">●</font>)<br>`;
-        } else {
-          html+=`${displayName}: ${valor}<br>`;
-        }
-      } else {
-        html+=`${displayName}: ${valor}<br>`;
-      }
+    const estado = row["estado_operacional_porto"] || "";
+    const estadoClass = estado === "Manutenção" ? "badge-warning"
+      : estado === "Construção" ? "badge-info"
+      : "badge-op";
+
+    const operadora = row["beneficiario_porto"] || "";
+
+    const viaJso = row["jso_nome"] && row["jso_nome"].toUpperCase().startsWith("JSO");
+    const otherFields = viaJso ? otherFieldsJso : otherFieldsSro;
+
+    const { numeroFibra, corFibra, tubo, corTubo } = corFibraETubo(row["pdo_ptfo"]);
+
+    html += `<div class="result-item">`;
+    html += `<div class="result-badges">`
+      + `<span class="badge ${statusClass}">${statusLabel}</span>`
+      + (estado ? `<span class="badge ${estadoClass}">${estado}</span>` : "")
+      + (operadora ? `<span class="badge badge-op">${operadora}</span>` : "")
+      + `</div>`;
+
+    if (numeroFibra > 0) {
+      html += `<div class="kv-row"><span class="kv-label">${DISPLAY_NAMES["pdo_ptfo"]}</span>`
+        + `<span class="kv-value">${row["pdo_ptfo"]} <span class="dot" style="background:${corFibra}"></span> `
+        + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${tubo}</small> <span class="dot" style="background:${corTubo}"></span></span></div>`;
     }
-    html += "<br>";
+
+    otherFields.forEach(col => {
+      const valor = row[col] || "—";
+      html += `<div class="kv-row"><span class="kv-label">${DISPLAY_NAMES[col]}</span><span class="kv-value">${valor}</span></div>`;
+      texto += `${DISPLAY_NAMES[col]}: ${valor}\n`;
+    });
+
+    texto += `${DISPLAY_NAMES["pdo_ptfo"]}: ${row["pdo_ptfo"] || ""}\n`;
+    texto += `Estado Porto: ${estado}\n`;
+    texto += `Operadora: ${operadora}\n`;
+    texto += `Status: ${statusLabel}\n\n`;
+
+    html += `</div>`;
   });
 
+  mostrarResultado(html, texto);
+  if (guardarHistorico) guardarNoHistorico(`PDO ${pdo} · Porto ${porto}`, { pdo, porto });
+}
+
+function mostrarResultado(html, textoPlano) {
   textResult.innerHTML = html;
+  ultimoResultadoTexto = textoPlano;
+  resultActions.style.display = textoPlano ? "flex" : "none";
+}
+
+// ================= COPIAR / PARTILHAR =================
+btnCopiar.addEventListener("click", async () => {
+  if (!ultimoResultadoTexto) return;
+  try {
+    await navigator.clipboard.writeText(ultimoResultadoTexto);
+    btnCopiar.textContent = "✅ Copiado!";
+    setTimeout(() => (btnCopiar.textContent = "📋 Copiar"), 1500);
+  } catch (e) {
+    alert("Não foi possível copiar automaticamente. Seleciona o texto manualmente.");
+  }
 });
+
+btnPartilhar.addEventListener("click", async () => {
+  if (!ultimoResultadoTexto) return;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "Resultado Pesquisa F.O", text: ultimoResultadoTexto });
+    } catch (e) { /* utilizador cancelou */ }
+  } else {
+    try {
+      await navigator.clipboard.writeText(ultimoResultadoTexto);
+      alert("Partilha direta não suportada neste dispositivo. Texto copiado para a área de transferência.");
+    } catch (e) {
+      alert("Partilha não suportada neste dispositivo.");
+    }
+  }
+});
+
+// ================= HISTÓRICO =================
+function lerHistorico() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function guardarNoHistorico(label, criteria) {
+  const historico = lerHistorico();
+  historico.unshift({ label, criteria, ts: Date.now() });
+  const cortado = historico.slice(0, HISTORY_MAX);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(cortado));
+  renderizarHistorico();
+}
+
+function formatarData(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString("pt-PT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+function renderizarHistorico() {
+  const historico = lerHistorico();
+  if (!historico.length) {
+    historyList.innerHTML = `<div class="history-empty">Ainda sem pesquisas guardadas.</div>`;
+    return;
+  }
+  historyList.innerHTML = historico.map((h, i) => `
+    <div class="history-item" data-index="${i}">
+      <div>${h.label}<small>${formatarData(h.ts)}</small></div>
+      <span>↺</span>
+    </div>
+  `).join("");
+
+  historyList.querySelectorAll(".history-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const i = parseInt(el.dataset.index);
+      repetirPesquisa(historico[i]);
+    });
+  });
+}
+
+function repetirPesquisa(item) {
+  if (!csvData.length) {
+    alert("Carrega o ficheiro CSV antes de repetir esta pesquisa.");
+    return;
+  }
+  const c = item.criteria;
+
+  resetSelects();
+
+  if (c.sro) {
+    spinnerSro.value = c.sro;
+    handleSroChange();
+    if (c.splitter) spinnerSplitter.value = c.splitter;
+  } else if (c.jso) {
+    spinnerJso.value = c.jso;
+    handleJsoChange();
+    if (c.jsoSplitter) spinnerJsoSplitter.value = c.jsoSplitter;
+  } else if (c.pdo) {
+    spinnerPdo.value = c.pdo;
+    updatePortos();
+    if (c.porto) spinnerPorto.value = c.porto;
+  }
+
+  executarPesquisa(false);
+  window.scrollTo({ top: textResult.offsetTop - 20, behavior: "smooth" });
+}
+
+function resetSelects() {
+  spinnerSro.value = "";
+  spinnerJso.value = "";
+  spinnerSro.disabled = false;
+  spinnerJso.disabled = false;
+  spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerJsoSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+}
+
+btnClearHistory.addEventListener("click", () => {
+  if (!confirm("Limpar todo o histórico de pesquisas?")) return;
+  localStorage.removeItem(HISTORY_KEY);
+  renderizarHistorico();
+});
+
+renderizarHistorico();

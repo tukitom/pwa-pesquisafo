@@ -10,56 +10,79 @@
 <header>
   <nav>
     <button onclick="window.location.href='index.html'">🏠 Início</button>
-    <button onclick="window.location.href='app.html'">📂 CSV</button>
+    <button class="active" onclick="window.location.href='app.html'">📂 CSV</button>
     <button onclick="window.location.href='calculadora.html'">🎨 Calculadora</button>
     <button onclick="window.location.href='mapa.html'">🗺️ Mapa</button>
   </nav>
 </header>
 
 <div id="app">
-  <input type="file" id="btnLoadCsv" accept=".csv,.txt">
-  <div id="textFileName">Nenhum ficheiro carregado</div>
 
-  <!-- SRO -->
-  <div class="spinner-row">
-    <label>SRO:</label>
-    <select id="spinnerSro"></select>
+  <div class="card">
+    <p class="card-title">📄 Ficheiro</p>
+    <input type="file" id="btnLoadCsv" accept=".csv,.txt">
+    <div id="textFileName" class="file-status">Nenhum ficheiro carregado</div>
   </div>
 
-  <div class="spinner-row">
-    <label>Splitter (SRO):</label>
-    <select id="spinnerSplitter">
-      <option value="">-- Selecionar --</option>
-    </select>
+  <div class="card">
+    <p class="card-title">🔌 SRO</p>
+    <div class="spinner-row">
+      <label>SRO</label>
+      <select id="spinnerSro"></select>
+    </div>
+    <div class="spinner-row">
+      <label>Splitter (SRO)</label>
+      <select id="spinnerSplitter">
+        <option value="">-- Selecionar --</option>
+      </select>
+    </div>
   </div>
 
-  <!-- JSO NOVO -->
-  <div class="spinner-row">
-    <label>JSO:</label>
-    <select id="spinnerJso"></select>
+  <div class="divider-or">ou</div>
+
+  <div class="card">
+    <p class="card-title">🔌 JSO</p>
+    <div class="spinner-row">
+      <label>JSO</label>
+      <select id="spinnerJso"></select>
+    </div>
+    <div class="spinner-row">
+      <label>Splitter (JSO)</label>
+      <select id="spinnerJsoSplitter">
+        <option value="">-- Selecionar --</option>
+      </select>
+    </div>
   </div>
 
-  <div class="spinner-row">
-    <label>Splitter (JSO):</label>
-    <select id="spinnerJsoSplitter">
-      <option value="">-- Selecionar --</option>
-    </select>
+  <div class="divider-or">ou</div>
+
+  <div class="card">
+    <p class="card-title">📦 PDO / Porto</p>
+    <div class="spinner-row">
+      <label>PDO</label>
+      <select id="spinnerPdo"></select>
+    </div>
+    <div class="spinner-row">
+      <label>Porto</label>
+      <select id="spinnerPorto"></select>
+    </div>
   </div>
 
-  <!-- PDO -->
-  <div class="spinner-row">
-    <label>PDO:</label>
-    <select id="spinnerPdo"></select>
-  </div>
-
-  <div class="spinner-row">
-    <label>Porto:</label>
-    <select id="spinnerPorto"></select>
-  </div>
-
-  <button id="btnPesquisar">Pesquisar</button>
+  <button id="btnPesquisar" class="primary">🔍 Pesquisar</button>
 
   <div id="textResult" class="result-box"></div>
+  <div class="result-actions" id="resultActions" style="display:none;">
+    <button id="btnCopiar">📋 Copiar</button>
+    <button id="btnPartilhar">📤 Partilhar</button>
+  </div>
+
+  <div class="card" id="historyCard" style="margin-top:16px;">
+    <p class="card-title">🕒 Histórico de Pesquisas
+      <button class="history-clear" id="btnClearHistory" style="margin-left:auto;">limpar</button>
+    </p>
+    <div id="historyList"></div>
+  </div>
+
 </div>
 
 <script src="app.js" charset="UTF-8"></script>

@@ -1,31 +1,11 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mapa Interativo FO Flores</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
-<style>
-  #map {
-    width: 100%;
-    height: 85vh;
-    border-radius: 8px;
-  }
-  #searchBox {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  nav {
-    display: flex;
-    gap: 8px;
-    background-color: #2B2B2B;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-  }
-</style>
 </head>
 <body>
 <header>
@@ -33,26 +13,33 @@
     <button onclick="window.location.href='index.html'">🏠 Início</button>
     <button onclick="window.location.href='app.html'">📂 CSV</button>
     <button onclick="window.location.href='calculadora.html'">🎨 Calculadora</button>
-    <button onclick="window.location.href='mapa.html'">🗺️ Mapa</button>
+    <button class="active" onclick="window.location.href='mapa.html'">🗺️ Mapa</button>
   </nav>
 </header>
 
-<div id="searchBox">
-  <input id="searchInput" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
+<div class="card">
+  <div id="searchBox">
+    <input id="searchInput" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
+    <button id="btnSearch" style="width:auto;flex-shrink:0;">🔍</button>
+  </div>
   <select id="filterSelect">
-    <option value="todos">Todos</option>
+    <option value="todos">Todos os locais</option>
     <option value="pdo">Só PDOs</option>
     <option value="jfo">Só Juntas</option>
     <option value="sro">Só SROs</option>
   </select>
-  <button id="btnSearch">Procurar</button>
+  <div class="map-legend">
+    <span><span class="dot" style="background:dodgerblue"></span> PDO</span>
+    <span><span class="dot" style="background:lime"></span> Junta (JFO)</span>
+    <span><span class="dot" style="background:orange"></span> SRO</span>
+  </div>
+  <div id="mapStatus" class="map-loading">A carregar locais...</div>
 </div>
 
 <div id="map"></div>
 
 <script src="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.js"></script>
 <script>
-  // Inicializar o mapa com imagem híbrida do Google (satélite + nomes de ruas)
   const map = new maplibregl.Map({
     container: 'map',
     style: {
@@ -84,10 +71,8 @@
     attributionControl: true
   });
 
-  // Controles de navegação (zoom e rotação)
   map.addControl(new maplibregl.NavigationControl());
 
-  // 🧭 Controle de geolocalização do utilizador
   map.addControl(
     new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
@@ -97,8 +82,8 @@
   );
 
   let todosOsMarkers = [];
+  const mapStatus = document.getElementById("mapStatus");
 
-  // Carregar e exibir marcadores
   fetch("Locais etiquetados.json")
     .then(res => res.json())
     .then(data => {
@@ -106,28 +91,19 @@
         const [lng, lat] = f.geometry.coordinates;
         const nome = f.properties.name;
 
-        // 🔸 Identificar tipo (PDO, JFO, SRO)
         let tipo = "outro";
         if (nome.toLowerCase().includes("pdo")) tipo = "pdo";
         else if (nome.toLowerCase().includes("jfo")) tipo = "jfo";
         else if (nome.toLowerCase().includes("sro")) tipo = "sro";
 
-        // 🔸 Cores: PDO = azul, JFO = verde-limão, SRO = laranja
         const color =
           tipo === "pdo" ? "dodgerblue" :
           tipo === "jfo" ? "lime" :
           tipo === "sro" ? "orange" :
           "gray";
 
-        const el = document.createElement('div');
-        el.style.backgroundColor = color;
-        el.style.width = '16px';
-        el.style.height = '16px';
-        el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-
         const popup = new maplibregl.Popup({ closeButton: true })
-          .setHTML(`<div style="color: black;"><b>${nome}</b></div>`);
+          .setHTML(`<div style="color:black;font-weight:600;">${nome}</div>`);
 
         const marker = new maplibregl.Marker({ color })
           .setLngLat([lng, lat])
@@ -136,9 +112,13 @@
 
         todosOsMarkers.push({ nome, tipo, marker });
       });
+      mapStatus.textContent = `${todosOsMarkers.length} locais carregados`;
+      setTimeout(() => { mapStatus.style.display = "none"; }, 2500);
+    })
+    .catch(() => {
+      mapStatus.textContent = "❌ Não foi possível carregar os locais.";
     });
 
-  // 🔍 Pesquisa manual
   document.getElementById("btnSearch").addEventListener("click", () => {
     const termo = document.getElementById("searchInput").value.trim().toLowerCase();
     if (!termo) return alert("Escreve o nome do PDO, JFO ou SRO.");
@@ -149,7 +129,10 @@
     encontrado.marker.togglePopup();
   });
 
-  // 🎯 Filtro de tipo
+  document.getElementById("searchInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("btnSearch").click();
+  });
+
   document.getElementById("filterSelect").addEventListener("change", (e) => {
     const filtro = e.target.value;
     todosOsMarkers.forEach(({ tipo, marker }) => {
