@@ -147,6 +147,8 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
   spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
     jsos.map(j => `<option>${j}</option>`).join("");
 
+  popularPdoCompleto();
+
   textFileName.textContent = `✅ ${nomeFicheiro} — ${csvData.length} linhas carregadas`;
   textFileName.classList.add("loaded");
 
@@ -219,6 +221,17 @@ function ordenarNumerico(lista) {
   });
 }
 
+// Lista completa de PDOs (usada quando ainda não escolheste um SRO/JSO,
+// e restaurada sempre que limpas essa escolha — permite também pesquisar
+// diretamente por PDO, e é essencial para o histórico conseguir "reabrir"
+// pesquisas feitas em modo PDO/Porto).
+function popularPdoCompleto() {
+  const pdosTodos = ordenarNumerico([...idx.byPdo.keys()]);
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>` +
+    pdosTodos.map(p => `<option>${p}</option>`).join("");
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+}
+
 // ================= SRO =================
 function handleSroChange() {
   const selectedSro = spinnerSro.value;
@@ -227,15 +240,18 @@ function handleSroChange() {
   else spinnerJso.disabled = false;
 
   spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
-  if (!selectedSro) return;
+  if (!selectedSro) {
+    popularPdoCompleto();
+    return;
+  }
 
   const rows = idx.bySro.get(selectedSro) || [];
   const pdosUnicos = ordenarNumerico([...new Set(rows.map(d => d["pdo_nome"]).filter(Boolean))]);
 
-  spinnerPdo.innerHTML += pdosUnicos.map(p => `<option>${p}</option>`).join("");
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>` +
+    pdosUnicos.map(p => `<option>${p}</option>`).join("");
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
   preencherSplitters(rows, "sro_splitter", spinnerSplitter);
 }
@@ -248,15 +264,18 @@ function handleJsoChange() {
   else spinnerSro.disabled = false;
 
   spinnerJsoSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
-  if (!selectedJso) return;
+  if (!selectedJso) {
+    popularPdoCompleto();
+    return;
+  }
 
   const rows = idx.byJso.get(selectedJso) || [];
   const pdosUnicos = ordenarNumerico([...new Set(rows.map(d => d["pdo_nome"]).filter(Boolean))]);
 
-  spinnerPdo.innerHTML += pdosUnicos.map(p => `<option>${p}</option>`).join("");
+  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>` +
+    pdosUnicos.map(p => `<option>${p}</option>`).join("");
+  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
   preencherSplitters(rows, "jso_splitter", spinnerJsoSplitter);
 }
@@ -307,6 +326,44 @@ function corFibraETubo(numeroStr) {
   return { numeroFibra, corFibra, tubo, corTubo };
 }
 
+// Monta uma linha de resultado para um OUT (SRO ou JSO), incluindo a cor/número
+// da fibra e do tubo no PDO, e agrupando todos os portos numa única linha quando
+// o PDO tem o seu próprio splitter (vários portos para a mesma fibra recebida).
+function montarLinhaOut(headerLabel, headerDots, item, statusLabel, statusClass) {
+  let headerHtml = headerLabel;
+  if (headerDots) {
+    headerHtml += ` <span class="dot" style="background:${headerDots.corFibra}"></span> `
+      + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${headerDots.tubo}</small> `
+      + `<span class="dot" style="background:${headerDots.corTubo}"></span>`;
+  }
+
+  const portosArray = [...item.portos].sort((a, b) => parseInt(a) - parseInt(b));
+  const portosLabel = portosArray.length > 1 ? "Portos" : "Porto";
+  const portosValor = portosArray.length ? portosArray.join(", ") : "?";
+
+  const pdoDots = corFibraETubo(item.pdoPtfo);
+  const temFibraPdo = pdoDots.numeroFibra > 0;
+
+  let html = `<div class="result-item">`;
+  html += `<div class="result-header">${headerHtml}</div>`;
+  html += `<div class="result-badges"><span class="badge ${statusClass}">${statusLabel}</span></div>`;
+  html += `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${item.pdo}</span></div>`;
+  if (temFibraPdo) {
+    html += `<div class="kv-row"><span class="kv-label">Fibra no PDO</span>`
+      + `<span class="kv-value">${item.pdoPtfo} <span class="dot" style="background:${pdoDots.corFibra}"></span> `
+      + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${pdoDots.tubo}</small> `
+      + `<span class="dot" style="background:${pdoDots.corTubo}"></span></span></div>`;
+  }
+  html += `<div class="kv-row"><span class="kv-label">${portosLabel}</span><span class="kv-value">${portosValor}</span></div>`;
+  html += `</div>`;
+
+  let texto = `PDO ${item.pdo}`;
+  if (temFibraPdo) texto += ` | Fibra PDO ${item.pdoPtfo} (Tubo ${pdoDots.tubo})`;
+  texto += ` | ${portosLabel} ${portosValor} | ${statusLabel}`;
+
+  return { html, texto };
+}
+
 // ================= PESQUISA =================
 btnPesquisar.addEventListener("click", () => executarPesquisa(true));
 
@@ -341,10 +398,16 @@ function executarPesquisa(guardarHistorico) {
       const out = d["jso_ptfo"];
       const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
       if (!outMap[out]) {
-        outMap[out] = { ocupado, pdo: d["pdo_nome"], porto: d["porto_pdo"] };
+        outMap[out] = {
+          ocupado, pdo: d["pdo_nome"],
+          portos: new Set(),
+          pdoPtfo: d["pdo_ptfo"],
+          pdoSplitter: d["pdo_splitter"]
+        };
       } else {
         outMap[out].ocupado = outMap[out].ocupado || ocupado;
       }
+      if (d["porto_pdo"]) outMap[out].portos.add(d["porto_pdo"]);
     });
 
     let html = `<div class="result-title">🔌 JSO ${jso} · Splitter ${jsoSplitter}</div>`;
@@ -357,16 +420,11 @@ function executarPesquisa(guardarHistorico) {
         const item = outMap[out];
         const statusLabel = item.ocupado ? "Ocupado" : "Livre";
         const statusClass = item.ocupado ? "badge-ocupado" : "badge-livre";
-
-        html += `<div class="result-item">`
-          + `<div class="result-header">OUT JSO ${out} <span class="dot" style="background:${corFibra}"></span> `
-          + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${tubo}</small> <span class="dot" style="background:${corTubo}"></span></div>`
-          + `<div class="result-badges"><span class="badge ${statusClass}">${statusLabel}</span></div>`
-          + `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${item.pdo}</span></div>`
-          + `<div class="kv-row"><span class="kv-label">Porto</span><span class="kv-value">${item.porto || "?"}</span></div>`
-          + `</div>`;
-
-        texto += `OUT JSO ${out} | PDO ${item.pdo} | Porto ${item.porto || "?"} | ${statusLabel}\n`;
+        const { html: itemHtml, texto: itemTexto } = montarLinhaOut(
+          `OUT JSO ${out}`, { corFibra, tubo, corTubo }, item, statusLabel, statusClass
+        );
+        html += itemHtml;
+        texto += `OUT JSO ${out} | ${itemTexto}\n`;
       });
 
     mostrarResultado(html, texto);
@@ -390,10 +448,16 @@ function executarPesquisa(guardarHistorico) {
       const out = d["sro_secundario_pt"];
       const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
       if (!outMap[out]) {
-        outMap[out] = { ocupado, pdo: d["pdo_nome"], porto: d["porto_pdo"] };
+        outMap[out] = {
+          ocupado, pdo: d["pdo_nome"],
+          portos: new Set(),
+          pdoPtfo: d["pdo_ptfo"],
+          pdoSplitter: d["pdo_splitter"]
+        };
       } else {
         outMap[out].ocupado = outMap[out].ocupado || ocupado;
       }
+      if (d["porto_pdo"]) outMap[out].portos.add(d["porto_pdo"]);
     });
 
     let html = `<div class="result-title">🔌 SRO ${sro} · Splitter ${splitter}</div>`;
@@ -405,15 +469,11 @@ function executarPesquisa(guardarHistorico) {
         const item = outMap[out];
         const statusLabel = item.ocupado ? "Ocupado" : "Livre";
         const statusClass = item.ocupado ? "badge-ocupado" : "badge-livre";
-
-        html += `<div class="result-item">`
-          + `<div class="result-header">OUT SRO ${out}</div>`
-          + `<div class="result-badges"><span class="badge ${statusClass}">${statusLabel}</span></div>`
-          + `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${item.pdo}</span></div>`
-          + `<div class="kv-row"><span class="kv-label">Porto</span><span class="kv-value">${item.porto || "?"}</span></div>`
-          + `</div>`;
-
-        texto += `OUT SRO ${out} | PDO ${item.pdo} | Porto ${item.porto || "?"} | ${statusLabel}\n`;
+        const { html: itemHtml, texto: itemTexto } = montarLinhaOut(
+          `OUT SRO ${out}`, null, item, statusLabel, statusClass
+        );
+        html += itemHtml;
+        texto += `OUT SRO ${out} | ${itemTexto}\n`;
       });
 
     mostrarResultado(html, texto);
@@ -598,9 +658,12 @@ function resetSelects() {
   spinnerSro.disabled = false;
   spinnerJso.disabled = false;
   spinnerSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerSplitter.value = "";
   spinnerJsoSplitter.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>`;
-  spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
+  spinnerJsoSplitter.value = "";
+  popularPdoCompleto();
+  spinnerPdo.value = "";
+  spinnerPorto.value = "";
 }
 
 btnClearHistory.addEventListener("click", () => {
