@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14161a">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Pesquisa F.O</title>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -70,6 +76,7 @@
   </div>
 
   <button id="btnPesquisar" class="primary">🔍 Pesquisar</button>
+  <button id="btnLimparTudo">🧹 Limpar Tudo</button>
 
   <div id="textResult" class="result-box"></div>
   <div class="result-actions" id="resultActions" style="display:none;">
@@ -87,5 +94,6 @@
 </div>
 
 <script src="app.js" charset="UTF-8"></script>
+<script src="sw-register.js"></script>
 </body>
 </html>

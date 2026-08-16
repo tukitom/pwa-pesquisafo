@@ -28,6 +28,41 @@ const HISTORY_MAX = 20;
 const CSV_STORAGE_KEY = "fo_csv_raw";
 const CSV_FILENAME_KEY = "fo_csv_filename";
 
+// Evita que texto vindo do CSV (ou do histórico) seja interpretado como
+// HTML/código ao ser inserido no ecrã — protege contra um valor "estranho"
+// num ficheiro (ex: um campo com "<" ou ">") partir o resultado ou, no
+// limite, correr código dentro da app.
+function escapeHtml(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Interpreta uma linha CSV respeitando campos entre aspas (ex: "Rua A; Nº 2"
+// não deve ser cortado no ";" que está dentro das aspas).
+function parseCsvLine(linha, separador) {
+  const valores = [];
+  let atual = "";
+  let dentroAspas = false;
+  for (let i = 0; i < linha.length; i++) {
+    const c = linha[i];
+    if (c === '"') {
+      if (dentroAspas && linha[i + 1] === '"') { atual += '"'; i++; }
+      else dentroAspas = !dentroAspas;
+    } else if (c === separador && !dentroAspas) {
+      valores.push(atual);
+      atual = "";
+    } else {
+      atual += c;
+    }
+  }
+  valores.push(atual);
+  return valores;
+}
+
 let csvData = [];
 const requiredCols = Object.keys(DISPLAY_NAMES);
 
@@ -119,11 +154,11 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
   if (!lines.length) { alert("Ficheiro CSV vazio!"); return; }
 
   const separador = detectarSeparador(lines[0]);
-  const headers = lines[0].split(separador).map(h => h.trim());
+  const headers = parseCsvLine(lines[0], separador).map(h => h.trim());
 
   csvData = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(separador);
+    const values = parseCsvLine(lines[i], separador);
     if (values.length === headers.length) {
       const row = {};
       for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j];
@@ -330,7 +365,7 @@ function corFibraETubo(numeroStr) {
 // da fibra e do tubo no PDO, e agrupando todos os portos numa única linha quando
 // o PDO tem o seu próprio splitter (vários portos para a mesma fibra recebida).
 function montarLinhaOut(headerLabel, headerDots, item, statusLabel, statusClass) {
-  let headerHtml = headerLabel;
+  let headerHtml = escapeHtml(headerLabel);
   if (headerDots) {
     headerHtml += ` <span class="dot" style="background:${headerDots.corFibra}"></span> `
       + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${headerDots.tubo}</small> `
@@ -339,18 +374,20 @@ function montarLinhaOut(headerLabel, headerDots, item, statusLabel, statusClass)
 
   const portosArray = [...item.portos].sort((a, b) => parseInt(a) - parseInt(b));
   const portosLabel = portosArray.length > 1 ? "Portos" : "Porto";
-  const portosValor = portosArray.length ? portosArray.join(", ") : "?";
+  const portosValor = portosArray.length ? portosArray.map(escapeHtml).join(", ") : "?";
 
   const pdoDots = corFibraETubo(item.pdoPtfo);
   const temFibraPdo = pdoDots.numeroFibra > 0;
+  const pdoNomeSeguro = escapeHtml(item.pdo);
+  const pdoPtfoSeguro = escapeHtml(item.pdoPtfo);
 
   let html = `<div class="result-item">`;
   html += `<div class="result-header">${headerHtml}</div>`;
   html += `<div class="result-badges"><span class="badge ${statusClass}">${statusLabel}</span></div>`;
-  html += `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${item.pdo}</span></div>`;
+  html += `<div class="kv-row"><span class="kv-label">PDO</span><span class="kv-value">${pdoNomeSeguro}</span></div>`;
   if (temFibraPdo) {
     html += `<div class="kv-row"><span class="kv-label">Fibra no PDO</span>`
-      + `<span class="kv-value">${item.pdoPtfo} <span class="dot" style="background:${pdoDots.corFibra}"></span> `
+      + `<span class="kv-value">${pdoPtfoSeguro} <span class="dot" style="background:${pdoDots.corFibra}"></span> `
       + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${pdoDots.tubo}</small> `
       + `<span class="dot" style="background:${pdoDots.corTubo}"></span></span></div>`;
   }
@@ -359,7 +396,7 @@ function montarLinhaOut(headerLabel, headerDots, item, statusLabel, statusClass)
 
   let texto = `PDO ${item.pdo}`;
   if (temFibraPdo) texto += ` | Fibra PDO ${item.pdoPtfo} (Tubo ${pdoDots.tubo})`;
-  texto += ` | ${portosLabel} ${portosValor} | ${statusLabel}`;
+  texto += ` | ${portosLabel} ${portosArray.join(", ") || "?"} | ${statusLabel}`;
 
   return { html, texto };
 }
@@ -410,7 +447,7 @@ function executarPesquisa(guardarHistorico) {
       if (d["porto_pdo"]) outMap[out].portos.add(d["porto_pdo"]);
     });
 
-    let html = `<div class="result-title">🔌 JSO ${jso} · Splitter ${jsoSplitter}</div>`;
+    let html = `<div class="result-title">🔌 JSO ${escapeHtml(jso)} · Splitter ${escapeHtml(jsoSplitter)}</div>`;
     let texto = `RESULTADO JSO ${jso} — Splitter ${jsoSplitter}\n`;
 
     Object.keys(outMap)
@@ -460,7 +497,7 @@ function executarPesquisa(guardarHistorico) {
       if (d["porto_pdo"]) outMap[out].portos.add(d["porto_pdo"]);
     });
 
-    let html = `<div class="result-title">🔌 SRO ${sro} · Splitter ${splitter}</div>`;
+    let html = `<div class="result-title">🔌 SRO ${escapeHtml(sro)} · Splitter ${escapeHtml(splitter)}</div>`;
     let texto = `RESULTADO SRO ${sro} — Splitter ${splitter}\n`;
 
     Object.keys(outMap)
@@ -494,7 +531,7 @@ function executarPesquisa(guardarHistorico) {
     return;
   }
 
-  let html = `<div class="result-title">📦 PDO ${pdo} · Porto ${porto}</div>`;
+  let html = `<div class="result-title">📦 PDO ${escapeHtml(pdo)} · Porto ${escapeHtml(porto)}</div>`;
   let texto = "RESULTADO\n";
 
   const otherFieldsSro = ["id_servico", "sro_nome", "sro_splitter", "sro_secundario_pt", "pdo_splitter"];
@@ -520,19 +557,19 @@ function executarPesquisa(guardarHistorico) {
     html += `<div class="result-item">`;
     html += `<div class="result-badges">`
       + `<span class="badge ${statusClass}">${statusLabel}</span>`
-      + (estado ? `<span class="badge ${estadoClass}">${estado}</span>` : "")
-      + (operadora ? `<span class="badge badge-op">${operadora}</span>` : "")
+      + (estado ? `<span class="badge ${estadoClass}">${escapeHtml(estado)}</span>` : "")
+      + (operadora ? `<span class="badge badge-op">${escapeHtml(operadora)}</span>` : "")
       + `</div>`;
 
     if (numeroFibra > 0) {
       html += `<div class="kv-row"><span class="kv-label">${DISPLAY_NAMES["pdo_ptfo"]}</span>`
-        + `<span class="kv-value">${row["pdo_ptfo"]} <span class="dot" style="background:${corFibra}"></span> `
+        + `<span class="kv-value">${escapeHtml(row["pdo_ptfo"])} <span class="dot" style="background:${corFibra}"></span> `
         + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${tubo}</small> <span class="dot" style="background:${corTubo}"></span></span></div>`;
     }
 
     otherFields.forEach(col => {
       const valor = row[col] || "—";
-      html += `<div class="kv-row"><span class="kv-label">${DISPLAY_NAMES[col]}</span><span class="kv-value">${valor}</span></div>`;
+      html += `<div class="kv-row"><span class="kv-label">${DISPLAY_NAMES[col]}</span><span class="kv-value">${escapeHtml(valor)}</span></div>`;
       texto += `${DISPLAY_NAMES[col]}: ${valor}\n`;
     });
 
@@ -593,9 +630,19 @@ function lerHistorico() {
 
 function guardarNoHistorico(label, criteria) {
   const historico = lerHistorico();
-  historico.unshift({ label, criteria, ts: Date.now() });
-  const cortado = historico.slice(0, HISTORY_MAX);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(cortado));
+
+  // Evita duplicados: se já existe uma entrada igual, remove-a antes de a
+  // voltar a colocar no topo (assim fica "atualizada" em vez de repetida).
+  const chaveNova = JSON.stringify(criteria);
+  const semDuplicado = historico.filter(h => JSON.stringify(h.criteria) !== chaveNova);
+
+  semDuplicado.unshift({ label, criteria, ts: Date.now() });
+  const cortado = semDuplicado.slice(0, HISTORY_MAX);
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(cortado));
+  } catch (e) {
+    console.warn("Não foi possível guardar o histórico:", e);
+  }
   renderizarHistorico();
 }
 
@@ -612,7 +659,7 @@ function renderizarHistorico() {
   }
   historyList.innerHTML = historico.map((h, i) => `
     <div class="history-item" data-index="${i}">
-      <div>${h.label}<small>${formatarData(h.ts)}</small></div>
+      <div>${escapeHtml(h.label)}<small>${formatarData(h.ts)}</small></div>
       <span>↺</span>
     </div>
   `).join("");
@@ -671,5 +718,13 @@ btnClearHistory.addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
   renderizarHistorico();
 });
+
+const btnLimparTudo = document.getElementById("btnLimparTudo");
+if (btnLimparTudo) {
+  btnLimparTudo.addEventListener("click", () => {
+    resetSelects();
+    mostrarResultado("", "");
+  });
+}
 
 renderizarHistorico();

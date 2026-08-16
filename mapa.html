@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14161a">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Mapa Interativo FO Flores</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
@@ -100,6 +106,18 @@
   }
 
   // ================= ADMIN =================
+  // Evita que um nome de ponto com HTML/JS embutido (vindo do ficheiro de
+  // locais ou escrito por um administrador) seja executado pela app —
+  // protege TODOS os utilizadores, não só quem edita o mapa.
+  function escapeHtml(valor) {
+    return String(valor ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   const ADMIN_HASH = "95464b02fe9fbde0f0d2817c28a76b3ef9dc803791651d856b4acba91397b720";
   const ADMIN_KEY = "fo_mapa_admin";
   let isAdmin = false;
@@ -231,14 +249,14 @@
     const tipoLabel = { pdo: "PDO", jfo: "Junta (JFO)", sro: "SRO", outro: "Outro" }[ponto.tipo];
     let html = `
       <div class="map-popup">
-        <div class="map-popup-title">${ponto.nome}</div>
+        <div class="map-popup-title">${escapeHtml(ponto.nome)}</div>
         <div class="map-popup-tipo">${tipoLabel}${ponto.origem === "added" ? " · adicionado" : ""}</div>`;
     if (isAdmin) {
       html += `
         <div class="map-popup-hint">Arrasta o marcador para mover</div>
         <div class="map-popup-actions">
-          <button class="popup-btn" onclick="window.renomearPonto('${ponto.id}')">✏️ Renomear</button>
-          <button class="popup-btn popup-btn-danger" onclick="window.apagarPonto('${ponto.id}')">🗑️ Apagar</button>
+          <button class="popup-btn" data-action="renomear" data-id="${escapeHtml(ponto.id)}">✏️ Renomear</button>
+          <button class="popup-btn popup-btn-danger" data-action="apagar" data-id="${escapeHtml(ponto.id)}">🗑️ Apagar</button>
         </div>`;
     }
     html += `</div>`;
@@ -321,6 +339,17 @@
     guardarOverrides();
     renderizar();
   };
+
+  // Delegação de eventos: os botões dos popups são inseridos como HTML puro
+  // (não é seguro usar onclick="...(${valor})" com texto vindo de fora),
+  // por isso ouvimos os cliques a partir do documento.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === "renomear") window.renomearPonto(id);
+    else if (action === "apagar") window.apagarPonto(id);
+  });
 
   function atualizarLegenda(contagens) {
     mapLegend.innerHTML = `
@@ -447,5 +476,6 @@
     renderizar();
   });
 </script>
+<script src="sw-register.js"></script>
 </body>
 </html>
