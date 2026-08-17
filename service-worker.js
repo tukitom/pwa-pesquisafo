@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pesquisafo-v8';
+const CACHE_NAME = 'pesquisafo-v9';
 
 // Ficheiros do próprio site (mesma origem) — se algum destes falhar a
 // descarregar, a instalação do Service Worker falha toda, por isso só
