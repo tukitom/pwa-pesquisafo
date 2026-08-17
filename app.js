@@ -518,6 +518,87 @@ function executarPesquisa(guardarHistorico) {
     return;
   }
 
+  // --- TODOS OS PORTOS DE UM PDO (PDO escolhido, sem Porto específico) ---
+  if (pdo && !porto) {
+    const rowsPdo = idx.byPdo.get(pdo) || [];
+    if (!rowsPdo.length) {
+      mostrarResultado("Nenhuma linha encontrada para este PDO.", "");
+      return;
+    }
+
+    // Agrupar por splitter no PDO: quando existe um splitter, todos os portos
+    // alimentados pela mesma fibra ficam juntos num só campo (em vez de repetir
+    // a fibra/tubo em cada porto separadamente).
+    const grupos = {};
+    rowsPdo.forEach(d => {
+      const p = d["porto_pdo"];
+      if (!p) return;
+      const ocupado = d["id_servico"] && d["id_servico"].trim() !== "";
+      const splitter = d["pdo_splitter"] || "";
+      const chave = splitter || ("individual-" + p);
+
+      if (!grupos[chave]) {
+        grupos[chave] = { splitter, pdoPtfo: d["pdo_ptfo"] || "", portos: {}, ordem: parseInt(p) || 0 };
+      }
+      const g = grupos[chave];
+      g.ordem = Math.min(g.ordem, parseInt(p) || g.ordem);
+      if (!g.portos[p] || (ocupado && !g.portos[p].ocupado)) {
+        g.portos[p] = { ocupado, idServico: d["id_servico"] || "" };
+      }
+    });
+
+    let html = `<div class="result-title">📦 Todos os Portos — PDO ${escapeHtml(pdo)}</div>`;
+    let texto = `TODOS OS PORTOS — PDO ${pdo}\n`;
+
+    Object.values(grupos)
+      .sort((a, b) => a.ordem - b.ordem)
+      .forEach(g => {
+        const portosOrdenados = Object.keys(g.portos).sort((a, b) => parseInt(a) - parseInt(b));
+        const { numeroFibra, corFibra, tubo, corTubo } = corFibraETubo(g.pdoPtfo);
+
+        const matchSplitter = g.splitter.match(/S(\d+)_(\d+)/);
+        const splitterLabel = matchSplitter
+          ? `${matchSplitter[2]}º Splitter de ${matchSplitter[1]} portas`
+          : "";
+
+        const headerTexto = portosOrdenados.length > 1
+          ? `Portos ${portosOrdenados.join(", ")}`
+          : `Porto ${portosOrdenados[0]}`;
+
+        html += `<div class="result-item">`;
+        html += `<div class="result-header">${escapeHtml(headerTexto)}</div>`;
+        if (splitterLabel) {
+          html += `<div class="result-badges"><span class="badge badge-op">${escapeHtml(splitterLabel)}</span></div>`;
+        }
+        if (numeroFibra > 0) {
+          html += `<div class="kv-row"><span class="kv-label">Fibra no PDO</span>`
+            + `<span class="kv-value">${escapeHtml(g.pdoPtfo)} <span class="dot" style="background:${corFibra}"></span> `
+            + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${tubo}</small> `
+            + `<span class="dot" style="background:${corTubo}"></span></span></div>`;
+        }
+
+        texto += headerTexto + (splitterLabel ? ` (${splitterLabel})` : "")
+          + (numeroFibra > 0 ? ` | Fibra PDO ${g.pdoPtfo} (Tubo ${tubo})` : "") + "\n";
+
+        portosOrdenados.forEach(p => {
+          const item = g.portos[p];
+          const statusLabel = item.ocupado ? "Ocupado" : "Livre";
+          const statusClass = item.ocupado ? "badge-ocupado" : "badge-livre";
+          html += `<div class="kv-row"><span class="kv-label">Porto ${escapeHtml(p)}</span>`
+            + `<span class="kv-value"><span class="badge ${statusClass}">${statusLabel}</span>`
+            + (item.ocupado && item.idServico ? ` <small style="color:var(--text-dim);">ID ${escapeHtml(item.idServico)}</small>` : "")
+            + `</span></div>`;
+          texto += `  Porto ${p} | ${statusLabel}` + (item.ocupado && item.idServico ? ` | ID ${item.idServico}` : "") + "\n";
+        });
+
+        html += `</div>`;
+      });
+
+    mostrarResultado(html, texto);
+    if (guardarHistorico) guardarNoHistorico(`Todos os portos · PDO ${pdo}`, { pdo });
+    return;
+  }
+
   // --- MODO PDO ---
   if (!pdo || !porto) {
     alert("Seleciona PDO e Porto, ou escolhe um splitter.");
