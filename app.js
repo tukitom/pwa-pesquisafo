@@ -96,6 +96,7 @@ const historyList = document.getElementById("historyList");
 const btnClearHistory = document.getElementById("btnClearHistory");
 const btnForgetCsv = document.getElementById("btnForgetCsv");
 const csvAgeWarning = document.getElementById("csvAgeWarning");
+const labelSoLivres = document.getElementById("labelSoLivres");
 
 let ultimoResultadoTexto = "";
 
@@ -143,6 +144,7 @@ if (btnForgetCsv) {
     textFileName.textContent = "Nenhum ficheiro carregado";
     textFileName.classList.remove("loaded");
     if (csvAgeWarning) csvAgeWarning.style.display = "none";
+    if (labelSoLivres) labelSoLivres.style.display = "none";
     btnForgetCsv.style.display = "none";
   });
 }
@@ -190,6 +192,7 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
 
   textFileName.textContent = `✅ ${nomeFicheiro} — ${csvData.length} linhas carregadas`;
   textFileName.classList.add("loaded");
+  if (labelSoLivres) labelSoLivres.style.display = "flex";
 
   if (guardarLocal) {
     try {

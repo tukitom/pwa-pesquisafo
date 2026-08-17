@@ -229,8 +229,12 @@ button.primary:hover { background-color: #2f6fd6; }
   margin: 0;
 }
 
-.filtro-livres .result-item:has(.result-badges .badge-ocupado) { display: none; }
-.filtro-livres .kv-row:has(.badge-ocupado) { display: none; }
+/* Filtro "Mostrar só portos livres": esconde qualquer cartão que já não
+   tenha nenhum "Livre" lá dentro (fica todo ocupado), e dentro dos que
+   sobram esconde as linhas individuais ocupadas — funciona da mesma forma
+   quer o porto seja avulso, quer faça parte de um grupo de splitter no PDO. */
+.filtro-livres .result-item:not(:has(.badge-livre)) { display: none; }
+.filtro-livres .result-item .kv-row:has(.badge-ocupado) { display: none; }
 
 .csv-age-warning {
   font-size: 12px;
@@ -523,7 +527,7 @@ nav button.active { background-color: var(--accent-dim); color: #7db2ff; }
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   z-index: 100;
   background-color: var(--accent);
   color: #fff;
