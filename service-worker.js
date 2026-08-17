@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pesquisafo-v7';
+const CACHE_NAME = 'pesquisafo-v8';
 
 // Ficheiros do próprio site (mesma origem) — se algum destes falhar a
 // descarregar, a instalação do Service Worker falha toda, por isso só
@@ -35,9 +35,14 @@ self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      await cache.addAll(LOCAL_ASSETS);
+      // { cache: 'reload' } garante que estes ficheiros vêm sempre direto do
+      // servidor (GitHub), nunca de uma cópia em cache HTTP do navegador —
+      // sem isto, o Service Worker podia "atualizar" mas continuar a guardar
+      // versões antigas do app.js/styles.css/etc. lá dentro.
+      const pedidosLocais = LOCAL_ASSETS.map(url => new Request(url, { cache: 'reload' }));
+      await cache.addAll(pedidosLocais);
       await Promise.allSettled(
-        CDN_ASSETS.map(url => cache.add(new Request(url, { mode: 'no-cors' })))
+        CDN_ASSETS.map(url => cache.add(new Request(url, { mode: 'no-cors', cache: 'reload' })))
       );
     })
   );

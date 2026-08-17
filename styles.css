@@ -20,6 +20,10 @@ body {
   background-color: var(--bg);
   color: var(--text);
   padding: 12px;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(12px + env(safe-area-inset-left, 0px));
+  padding-right: calc(12px + env(safe-area-inset-right, 0px));
   margin: 0;
   -webkit-tap-highlight-color: transparent;
 }
@@ -259,7 +263,7 @@ button.primary:hover { background-color: #2f6fd6; }
 .file-status.loaded { color: var(--ok); }
 
 /* Navbar */
-header { position: sticky; top: 0; z-index: 10; padding-top: 4px; }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; padding-top: 4px; }
 nav {
   display: flex;
   gap: 6px;
@@ -309,7 +313,7 @@ nav button.active { background-color: var(--accent-dim); color: #7db2ff; }
 
 /* Página inicial */
 .hero {
-  min-height: calc(100vh - 24px);
+  min-height: calc(100vh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   align-items: center;

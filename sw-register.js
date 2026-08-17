@@ -5,11 +5,16 @@ if ('serviceWorker' in navigator) {
   let avisoJaMostrado = false;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').then(reg => {
-      // Sempre que a app volta a ficar em primeiro plano (ex: o utilizador
-      // reabre-a), verifica em segundo plano se há uma versão nova no
-      // GitHub — sem isto, só verificaria de vez em quando por conta do
-      // navegador (normalmente uma vez por dia).
+    // updateViaCache: 'none' garante que o navegador nunca usa uma cópia em
+    // cache HTTP do próprio service-worker.js — sem isto, pode continuar a
+    // achar que estamos na versão antiga mesmo depois de a teres substituído
+    // no GitHub, porque está a comparar contra um ficheiro desatualizado.
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(reg => {
+      // Verifica logo ao abrir a app — o "visibilitychange" só dispara em
+      // mudanças de estado (esconder/mostrar), nunca na primeira abertura.
+      reg.update().catch(() => {});
+
+      // E também sempre que a app volta a ficar em primeiro plano.
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') reg.update().catch(() => {});
       });
