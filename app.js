@@ -27,6 +27,7 @@ const HISTORY_KEY = "fo_pesquisa_historico";
 const HISTORY_MAX = 20;
 const CSV_STORAGE_KEY = "fo_csv_raw";
 const CSV_FILENAME_KEY = "fo_csv_filename";
+const CSV_LOADED_AT_KEY = "fo_csv_loaded_at";
 
 // Evita que texto vindo do CSV (ou do histórico) seja interpretado como
 // HTML/código ao ser inserido no ecrã — protege contra um valor "estranho"
@@ -94,6 +95,7 @@ const btnPartilhar = document.getElementById("btnPartilhar");
 const historyList = document.getElementById("historyList");
 const btnClearHistory = document.getElementById("btnClearHistory");
 const btnForgetCsv = document.getElementById("btnForgetCsv");
+const csvAgeWarning = document.getElementById("csvAgeWarning");
 
 let ultimoResultadoTexto = "";
 
@@ -133,12 +135,14 @@ if (btnForgetCsv) {
     try {
       localStorage.removeItem(CSV_STORAGE_KEY);
       localStorage.removeItem(CSV_FILENAME_KEY);
+      localStorage.removeItem(CSV_LOADED_AT_KEY);
     } catch (e) {}
     csvData = [];
     construirIndices();
     resetSpinners(false);
     textFileName.textContent = "Nenhum ficheiro carregado";
     textFileName.classList.remove("loaded");
+    if (csvAgeWarning) csvAgeWarning.style.display = "none";
     btnForgetCsv.style.display = "none";
   });
 }
@@ -191,11 +195,37 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
     try {
       localStorage.setItem(CSV_STORAGE_KEY, texto);
       localStorage.setItem(CSV_FILENAME_KEY, nomeFicheiro);
+      localStorage.setItem(CSV_LOADED_AT_KEY, String(Date.now()));
       if (btnForgetCsv) btnForgetCsv.style.display = "inline-block";
     } catch (e) {
       // Ficheiro demasiado grande para guardar localmente — continua a funcionar só nesta sessão
       console.warn("Não foi possível guardar o CSV localmente:", e);
     }
+  }
+  mostrarAvisoIdadeCsv();
+}
+
+function mostrarAvisoIdadeCsv() {
+  if (!csvAgeWarning) return;
+  let carregadoEm = null;
+  try { carregadoEm = parseInt(localStorage.getItem(CSV_LOADED_AT_KEY)); } catch (e) {}
+  if (!carregadoEm) { csvAgeWarning.style.display = "none"; return; }
+
+  const dataCarregado = new Date(carregadoEm);
+  const agora = new Date();
+
+  // Diferença em meses de calendário (ex: carregado em junho, estamos em agosto -> 2 meses)
+  const diffMeses = (agora.getFullYear() - dataCarregado.getFullYear()) * 12
+    + (agora.getMonth() - dataCarregado.getMonth());
+
+  if (diffMeses >= 1) {
+    const nomesMeses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+    const mesCarregado = nomesMeses[dataCarregado.getMonth()];
+    const textoMeses = diffMeses === 1 ? "há 1 mês" : `há ${diffMeses} meses`;
+    csvAgeWarning.textContent = `⚠️ Este ficheiro é de ${mesCarregado} (${textoMeses}) — considera carregar uma versão mais recente.`;
+    csvAgeWarning.style.display = "block";
+  } else {
+    csvAgeWarning.style.display = "none";
   }
 }
 
@@ -550,6 +580,17 @@ function executarPesquisa(guardarHistorico) {
     let html = `<div class="result-title">📦 Todos os Portos — PDO ${escapeHtml(pdo)}</div>`;
     let texto = `TODOS OS PORTOS — PDO ${pdo}\n`;
 
+    const totalPortos = Object.values(grupos).reduce((acc, g) => acc + Object.keys(g.portos).length, 0);
+    const totalOcupados = Object.values(grupos).reduce(
+      (acc, g) => acc + Object.values(g.portos).filter(p => p.ocupado).length, 0
+    );
+    const totalLivres = totalPortos - totalOcupados;
+    html += `<div class="result-summary">`
+      + `<span class="badge badge-livre">${totalLivres} livres</span>`
+      + `<span class="badge badge-ocupado">${totalOcupados} ocupados</span>`
+      + `</div>`;
+    texto += `${totalLivres} livres | ${totalOcupados} ocupados\n\n`;
+
     Object.values(grupos)
       .sort((a, b) => a.ordem - b.ordem)
       .forEach(g => {
@@ -654,6 +695,8 @@ function executarPesquisa(guardarHistorico) {
       texto += `${DISPLAY_NAMES[col]}: ${valor}\n`;
     });
 
+    html += `<button class="ver-portos-link" data-action="ver-portos-pdo" data-pdo="${escapeHtml(pdo)}">📦 Ver todos os portos deste PDO</button>`;
+
     texto += `${DISPLAY_NAMES["pdo_ptfo"]}: ${row["pdo_ptfo"] || ""}\n`;
     texto += `Estado Porto: ${estado}\n`;
     texto += `Operadora: ${operadora}\n`;
@@ -670,6 +713,35 @@ function mostrarResultado(html, textoPlano) {
   textResult.innerHTML = html;
   ultimoResultadoTexto = textoPlano;
   resultActions.style.display = textoPlano ? "flex" : "none";
+  aplicarFiltroLivres();
+}
+
+// Botão "Ver todos os portos deste PDO" dentro dos resultados — delegação de
+// eventos porque o HTML é inserido dinamicamente via innerHTML.
+textResult.addEventListener("click", (e) => {
+  const btn = e.target.closest('[data-action="ver-portos-pdo"]');
+  if (!btn) return;
+  const pdoAlvo = btn.dataset.pdo;
+  pesquisarTodosPortosDoPdo(pdoAlvo);
+});
+
+function pesquisarTodosPortosDoPdo(nomePdo) {
+  if (!csvData.length || !idx.byPdo.has(nomePdo)) return;
+  resetSelects();
+  popularPdoCompleto();
+  spinnerPdo.value = nomePdo;
+  executarPesquisa(true);
+  window.scrollTo({ top: textResult.offsetTop - 20, behavior: "smooth" });
+}
+
+// ================= FILTRO "SÓ LIVRES" =================
+const checkboxSoLivres = document.getElementById("checkboxSoLivres");
+function aplicarFiltroLivres() {
+  if (!checkboxSoLivres) return;
+  textResult.classList.toggle("filtro-livres", checkboxSoLivres.checked);
+}
+if (checkboxSoLivres) {
+  checkboxSoLivres.addEventListener("change", aplicarFiltroLivres);
 }
 
 // ================= COPIAR / PARTILHAR =================
@@ -809,3 +881,21 @@ if (btnLimparTudo) {
 }
 
 renderizarHistorico();
+
+// Se a app foi aberta a partir de um link do Mapa (ex: app.html?pdo=PDO1006),
+// já vai direto à pesquisa "todos os portos" desse PDO.
+(function aplicarPdoDaUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const pdoParam = params.get("pdo");
+  if (!pdoParam) return;
+
+  if (!csvData.length) {
+    alert(`Carrega primeiro um ficheiro CSV para veres o PDO "${pdoParam}".`);
+    return;
+  }
+  if (!idx.byPdo.has(pdoParam)) {
+    alert(`O PDO "${pdoParam}" não foi encontrado no ficheiro CSV carregado.`);
+    return;
+  }
+  pesquisarTodosPortosDoPdo(pdoParam);
+})();

@@ -28,6 +28,7 @@
     <p class="card-title">📄 Ficheiro</p>
     <input type="file" id="btnLoadCsv" accept=".csv,.txt">
     <div id="textFileName" class="file-status">Nenhum ficheiro carregado</div>
+    <div id="csvAgeWarning" class="csv-age-warning" style="display:none;"></div>
     <button id="btnForgetCsv" class="history-clear" style="display:none;">🗑️ Esquecer ficheiro guardado</button>
   </div>
 
@@ -77,6 +78,11 @@
 
   <button id="btnPesquisar" class="primary">🔍 Pesquisar</button>
   <button id="btnLimparTudo">🧹 Limpar Tudo</button>
+
+  <label class="checkbox-row">
+    <input type="checkbox" id="checkboxSoLivres">
+    <span>Mostrar só portos livres</span>
+  </label>
 
   <div id="textResult" class="result-box"></div>
   <div class="result-actions" id="resultActions" style="display:none;">

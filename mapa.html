@@ -23,11 +23,12 @@
   </nav>
 </header>
 
-<div class="card">
+<div class="card" style="position:relative;">
   <div id="searchBox">
     <input id="searchInput" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
     <button id="btnSearch" style="width:auto;flex-shrink:0;">🔍</button>
   </div>
+  <div id="searchSuggestions" class="search-suggestions" style="display:none;"></div>
   <select id="filterSelect">
     <option value="todos">Todos os locais</option>
     <option value="pdo">Só PDOs</option>
@@ -251,6 +252,9 @@
       <div class="map-popup">
         <div class="map-popup-title">${escapeHtml(ponto.nome)}</div>
         <div class="map-popup-tipo">${tipoLabel}${ponto.origem === "added" ? " · adicionado" : ""}</div>`;
+    if (ponto.tipo === "pdo") {
+      html += `<a class="popup-btn popup-btn-link" href="app.html?pdo=${encodeURIComponent(ponto.nome)}">🔍 Ver na Pesquisa</a>`;
+    }
     if (isAdmin) {
       html += `
         <div class="map-popup-hint">Arrasta o marcador para mover</div>
@@ -267,34 +271,97 @@
     marcadoresAtuais.forEach(m => m.marker.remove());
     marcadoresAtuais = [];
 
-    const lista = montarListaFinal();
+    const listaCompleta = montarListaFinal();
+    const listaFiltrada = filtroAtual === "todos" ? listaCompleta : listaCompleta.filter(p => p.tipo === filtroAtual);
+
+    const zoomAtual = map.getZoom ? map.getZoom() : 20;
+    const grupos = zoomAtual < CLUSTER_ZOOM_THRESHOLD
+      ? calcularClusters(listaFiltrada)
+      : listaFiltrada.map(p => [p]);
+
     const contagens = { pdo: 0, jfo: 0, sro: 0, outro: 0 };
+    listaCompleta.forEach(p => contagens[p.tipo]++);
 
-    lista.forEach(ponto => {
-      contagens[ponto.tipo]++;
+    grupos.forEach(grupo => {
+      if (grupo.length === 1) {
+        const ponto = grupo[0];
+        const cor = corPorTipo(ponto.tipo);
+        const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: false })
+          .setHTML(popupHtml(ponto));
 
-      const cor = corPorTipo(ponto.tipo);
-      const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: false })
-        .setHTML(popupHtml(ponto));
+        const marker = new maplibregl.Marker({ color: cor, draggable: isAdmin })
+          .setLngLat([ponto.lng, ponto.lat])
+          .setPopup(popup)
+          .addTo(map);
 
-      const marker = new maplibregl.Marker({ color: cor, draggable: isAdmin })
-        .setLngLat([ponto.lng, ponto.lat])
-        .setPopup(popup)
-        .addTo(map);
+        if (isAdmin) {
+          marker.on("dragend", () => {
+            const pos = marker.getLngLat();
+            guardarPosicao(ponto, pos.lat, pos.lng);
+          });
+        }
 
-      if (isAdmin) {
-        marker.on("dragend", () => {
-          const pos = marker.getLngLat();
-          guardarPosicao(ponto, pos.lat, pos.lng);
+        marcadoresAtuais.push({ id: ponto.id, nome: ponto.nome, tipo: ponto.tipo, marker, origem: ponto.origem });
+      } else {
+        const centroLat = grupo.reduce((a, p) => a + p.lat, 0) / grupo.length;
+        const centroLng = grupo.reduce((a, p) => a + p.lng, 0) / grupo.length;
+        const el = criarElementoCluster(grupo);
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([centroLng, centroLat])
+          .addTo(map);
+
+        el.addEventListener("click", () => {
+          map.flyTo({ center: [centroLng, centroLat], zoom: Math.max(zoomAtual + 3, CLUSTER_ZOOM_THRESHOLD + 0.5) });
+        });
+
+        marcadoresAtuais.push({
+          id: "cluster-" + centroLat.toFixed(4) + "-" + centroLng.toFixed(4),
+          nome: "", tipo: "cluster", marker, origem: "cluster"
         });
       }
-
-      marcadoresAtuais.push({ id: ponto.id, nome: ponto.nome, tipo: ponto.tipo, marker, origem: ponto.origem });
     });
 
-    aplicarFiltro(filtroAtual);
     atualizarLegenda(contagens);
   }
+
+  // Agrupa pontos que ficam muito próximos no ecrã (em pixels, não em graus —
+  // assim o agrupamento reflete o que se vê, seja qual for o zoom).
+  const CLUSTER_ZOOM_THRESHOLD = 14;
+  const CLUSTER_RAIO_PX = 45;
+
+  function calcularClusters(pontos) {
+    const grupos = [];
+    const usados = new Array(pontos.length).fill(false);
+    const projetados = pontos.map(p => map.project([p.lng, p.lat]));
+
+    for (let i = 0; i < pontos.length; i++) {
+      if (usados[i]) continue;
+      const grupo = [pontos[i]];
+      usados[i] = true;
+      for (let j = i + 1; j < pontos.length; j++) {
+        if (usados[j]) continue;
+        const dx = projetados[i].x - projetados[j].x;
+        const dy = projetados[i].y - projetados[j].y;
+        if (Math.sqrt(dx * dx + dy * dy) < CLUSTER_RAIO_PX) {
+          grupo.push(pontos[j]);
+          usados[j] = true;
+        }
+      }
+      grupos.push(grupo);
+    }
+    return grupos;
+  }
+
+  function criarElementoCluster(grupo) {
+    const el = document.createElement("div");
+    el.className = "cluster-marker";
+    el.textContent = String(grupo.length);
+    return el;
+  }
+
+  map.on("zoomend", () => renderizar());
+
 
   function guardarPosicao(ponto, lat, lng) {
     if (ponto.origem === "added") {
@@ -362,10 +429,7 @@
 
   function aplicarFiltro(filtro) {
     filtroAtual = filtro;
-    marcadoresAtuais.forEach(({ tipo, marker }) => {
-      if (filtro === "todos" || filtro === tipo) marker.addTo(map);
-      else marker.remove();
-    });
+    renderizar();
   }
 
   // ================= CARREGAR DADOS =================
@@ -394,14 +458,69 @@
     });
 
   // ================= PESQUISA =================
+  const searchInput = document.getElementById("searchInput");
+  const searchSuggestions = document.getElementById("searchSuggestions");
+
+  function irParaPonto(alvo) {
+    // Garante um zoom onde o ponto já não está agrupado num cluster, e só
+    // abre o popup depois de a câmara parar de se mover.
+    const zoomAlvo = Math.max(map.getZoom(), CLUSTER_ZOOM_THRESHOLD + 1);
+    map.once("moveend", () => {
+      renderizar();
+      const encontrado = marcadoresAtuais.find(m => m.id === alvo.id);
+      if (encontrado) encontrado.marker.togglePopup();
+    });
+    map.flyTo({ center: [alvo.lng, alvo.lat], zoom: zoomAlvo, speed: 0.8 });
+  }
+
+  function pesquisarPorTermo(termo) {
+    const listaCompleta = montarListaFinal();
+    const alvo = listaCompleta.find(p => p.nome.toLowerCase().includes(termo.toLowerCase()));
+    if (!alvo) { alert("Local não encontrado!"); return; }
+    irParaPonto(alvo);
+  }
+
   document.getElementById("btnSearch").addEventListener("click", () => {
-    const termo = document.getElementById("searchInput").value.trim().toLowerCase();
+    const termo = searchInput.value.trim();
     if (!termo) return alert("Escreve o nome do PDO, JFO ou SRO.");
-    const encontrado = marcadoresAtuais.find(m => m.nome.toLowerCase().includes(termo));
-    if (!encontrado) return alert("Local não encontrado!");
-    const pos = encontrado.marker.getLngLat();
-    map.flyTo({ center: pos, zoom: 17, speed: 0.8 });
-    encontrado.marker.togglePopup();
+    esconderSugestoes();
+    pesquisarPorTermo(termo);
+  });
+
+  function esconderSugestoes() {
+    searchSuggestions.style.display = "none";
+    searchSuggestions.innerHTML = "";
+  }
+
+  searchInput.addEventListener("input", () => {
+    const termo = searchInput.value.trim().toLowerCase();
+    if (termo.length < 2) { esconderSugestoes(); return; }
+
+    const listaCompleta = montarListaFinal();
+    const correspondencias = listaCompleta
+      .filter(p => p.nome.toLowerCase().includes(termo))
+      .slice(0, 6);
+
+    if (!correspondencias.length) { esconderSugestoes(); return; }
+
+    searchSuggestions.innerHTML = correspondencias
+      .map(p => `<div class="suggestion-item" data-id="${escapeHtml(p.id)}">${escapeHtml(p.nome)}</div>`)
+      .join("");
+    searchSuggestions.style.display = "block";
+
+    searchSuggestions.querySelectorAll(".suggestion-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const alvo = listaCompleta.find(p => p.id === el.dataset.id);
+        searchInput.value = alvo.nome;
+        esconderSugestoes();
+        if (alvo) irParaPonto(alvo);
+      });
+    });
+  });
+
+  searchInput.addEventListener("blur", () => {
+    // Pequeno atraso para o clique numa sugestão registar antes de a escondermos
+    setTimeout(esconderSugestoes, 150);
   });
 
   document.getElementById("searchInput").addEventListener("keydown", (e) => {
