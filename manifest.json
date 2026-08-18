@@ -32,6 +32,12 @@
       "short_name": "Calculadora",
       "url": "calculadora.html",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Comparar Ficheiros",
+      "short_name": "Comparar",
+      "url": "comparar.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

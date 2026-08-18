@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14161a">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PesquisaFO">
+<title>Comparar Ficheiros — Pesquisa F.O</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <nav>
+    <button onclick="window.location.href='index.html'">🏠 Início</button>
+    <button onclick="window.location.href='app.html'">📂 CSV</button>
+    <button onclick="window.location.href='calculadora.html'">🎨 Calculadora</button>
+    <button onclick="window.location.href='mapa.html'">🗺️ Mapa</button>
+    <button class="active" onclick="window.location.href='comparar.html'">🔀 Comparar</button>
+  </nav>
+</header>
+
+<div id="app">
+
+  <div class="card">
+    <p class="card-title">📄 Ficheiro Antigo</p>
+    <input type="file" id="btnLoadAntigo" accept=".csv,.txt" aria-label="Carregar ficheiro CSV antigo">
+    <div id="statusAntigo" class="file-status" aria-live="polite">Nenhum ficheiro carregado</div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">📄 Ficheiro Novo</p>
+    <input type="file" id="btnLoadNovo" accept=".csv,.txt" aria-label="Carregar ficheiro CSV novo">
+    <div id="statusNovo" class="file-status" aria-live="polite">Nenhum ficheiro carregado</div>
+  </div>
+
+  <button id="btnComparar" class="primary">🔀 Comparar</button>
+
+  <div id="comparResult" class="result-box" aria-live="polite"></div>
+  <div class="result-actions" id="comparResultActions" style="display:none;">
+    <button id="btnCopiarComparar">📋 Copiar</button>
+    <button id="btnPartilharComparar">📤 Partilhar</button>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script src="comparar.js" charset="UTF-8"></script>
+<script src="sw-register.js"></script>
+</body>
+</html>

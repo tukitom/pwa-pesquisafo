@@ -357,10 +357,10 @@ nav button.active { background-color: var(--accent-dim); color: #7db2ff; }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   width: 100%;
-  max-width: 420px;
+  max-width: 340px;
 }
 
 .hero-tile {

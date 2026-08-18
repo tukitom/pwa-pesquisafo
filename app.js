@@ -1,22 +1,3 @@
-const DISPLAY_NAMES = {
-  id_servico: "ID do Serviço",
-
-  sro_nome: "SRO",
-  sro_splitter: "Splitter No SRO",
-  sro_secundario_pt: "OUT SRO",
-
-  jso_nome: "JSO",
-  jso_splitter: "Splitter Na JSO",
-  jso_ptfo: "OUT JSO",
-
-  pdo_nome: "PDO",
-  pdo_ptfo: "Número da Fibra(PDO)",
-  pdo_splitter: "Splitter No PDO",
-  porto_pdo: "Porto",
-  estado_operacional_porto: "Estado Porto",
-  beneficiario_porto: "Operadora"
-};
-
 const FIBRA_COLORS = {
   1:"#FFFFFF",2:"#FF0000",3:"#00FF00",4:"#0000FF",
   5:"#000000",6:"#FFFF00",7:"#FFA500",8:"#808080",
@@ -43,43 +24,12 @@ const CSV_STORAGE_KEY = "fo_csv_raw";
 const CSV_FILENAME_KEY = "fo_csv_filename";
 const CSV_LOADED_AT_KEY = "fo_csv_loaded_at";
 
-// Evita que texto vindo do CSV (ou do histórico) seja interpretado como
-// HTML/código ao ser inserido no ecrã — protege contra um valor "estranho"
-// num ficheiro (ex: um campo com "<" ou ">") partir o resultado ou, no
-// limite, correr código dentro da app.
-function escapeHtml(valor) {
-  return String(valor ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-// Interpreta uma linha CSV respeitando campos entre aspas (ex: "Rua A; Nº 2"
-// não deve ser cortado no ";" que está dentro das aspas).
-function parseCsvLine(linha, separador) {
-  const valores = [];
-  let atual = "";
-  let dentroAspas = false;
-  for (let i = 0; i < linha.length; i++) {
-    const c = linha[i];
-    if (c === '"') {
-      if (dentroAspas && linha[i + 1] === '"') { atual += '"'; i++; }
-      else dentroAspas = !dentroAspas;
-    } else if (c === separador && !dentroAspas) {
-      valores.push(atual);
-      atual = "";
-    } else {
-      atual += c;
-    }
-  }
-  valores.push(atual);
-  return valores;
-}
+// escapeHtml, parseCsvLine, detectarSeparador, decodificarTexto,
+// parseCsvGenerico, DISPLAY_NAMES, requiredCols e as funções de formatação
+// da partilha (cabecalhoPartilha, rodapePartilha, statusEmoji,
+// agoraFormatado) vivem agora em shared.js — partilhadas com o Comparar.
 
 let csvData = [];
-const requiredCols = Object.keys(DISPLAY_NAMES);
 
 // ---- Índices construídos ao carregar o CSV (pesquisa rápida mesmo com ficheiros grandes) ----
 let idx = {
@@ -155,13 +105,7 @@ btnLoadCsv.addEventListener("change", event => {
 // "ServiÃ§o"). Aqui tentamos UTF-8 em modo "fatal" — se o ficheiro tiver bytes
 // que não são UTF-8 válido, cai automaticamente para Windows-1252, que lê
 // corretamente a acentuação latina destes exports.
-function decodificarTexto(buffer) {
-  try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
-  } catch (e) {
-    return new TextDecoder("windows-1252").decode(buffer);
-  }
-}
+// decodificarTexto e detectarSeparador vivem agora em shared.js.
 
 if (btnForgetCsv) {
   btnForgetCsv.addEventListener("click", () => {
@@ -182,67 +126,39 @@ if (btnForgetCsv) {
   });
 }
 
-function detectarSeparador(linha) {
-  if (linha.includes(";")) return ";";
-  if (linha.includes("\t")) return "\t";
-  return ",";
-}
-
 function carregarCsv(texto, nomeFicheiro, guardarLocal) {
-  const lines = texto.split(/\r?\n/).filter(l => l.trim() !== "");
-  if (!lines.length) { alert("Ficheiro CSV vazio!"); return; }
+  const resultado = parseCsvGenerico(texto, requiredCols);
 
-  const separador = detectarSeparador(lines[0]);
-  const headers = parseCsvLine(lines[0], separador).map(h => h.trim());
-
-  // Se faltarem colunas essenciais (ex: ficheiro errado ou exportado de forma
-  // diferente), a pesquisa ficaria sempre vazia sem se perceber porquê —
-  // por isso avisamos já aqui, com o nome das colunas em falta.
-  const colunasEmFalta = requiredCols.filter(c => !headers.includes(c));
-  if (colunasEmFalta.length) {
+  if (resultado.erro === "vazio") {
+    alert("Ficheiro CSV vazio!");
+    return;
+  }
+  if (resultado.erro === "colunas") {
     alert(
-      `⚠️ Este ficheiro não parece ser um export válido: faltam ${colunasEmFalta.length} coluna(s) esperada(s):\n\n` +
-      colunasEmFalta.join(", ") +
+      `⚠️ Este ficheiro não parece ser um export válido: faltam ${resultado.colunasEmFalta.length} coluna(s) esperada(s):\n\n` +
+      resultado.colunasEmFalta.join(", ") +
       `\n\nVerifica se carregaste o ficheiro certo.`
     );
     textFileName.textContent = "❌ Ficheiro com colunas em falta — não foi carregado.";
     textFileName.classList.remove("loaded");
     return;
   }
-
-  const csvDataAnterior = csvData;
-  csvData = [];
-  let linhasIgnoradas = 0;
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCsvLine(lines[i], separador);
-    if (values.length === headers.length) {
-      const row = {};
-      for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j];
-      csvData.push(row);
-    } else {
-      // Nº de colunas não bate certo com o cabeçalho (ex: separador dentro
-      // de um campo não escapado entre aspas) — a linha é ignorada em vez de
-      // partir a app, mas o utilizador é avisado de que faltam dados.
-      linhasIgnoradas++;
-    }
-  }
-
-  if (linhasIgnoradas > 0) {
-    console.warn(`[CSV] ${linhasIgnoradas} linha(s) ignorada(s) por não terem o número de colunas esperado.`);
-  }
-
-  // Ficheiro só com cabeçalho (ou onde todas as linhas de dados foram
-  // ignoradas por má formação) — mantém os dados anteriores em vez de
-  // apagar uma pesquisa que já estava a funcionar, e avisa claramente
-  // em vez de mostrar "0 linhas carregadas" com um ✅ como se estivesse tudo bem.
-  if (csvData.length === 0) {
-    csvData = csvDataAnterior;
+  if (resultado.erro === "semdados") {
+    // Ficheiro só com cabeçalho (ou onde todas as linhas de dados foram
+    // ignoradas por má formação) — mantém os dados anteriores em vez de
+    // apagar uma pesquisa que já estava a funcionar.
     alert("Este ficheiro não tem nenhuma linha de dados válida (só o cabeçalho, ou todas as linhas estão mal formadas). O ficheiro anterior foi mantido.");
     textFileName.textContent = "❌ Ficheiro sem dados válidos — não foi carregado.";
     textFileName.classList.remove("loaded");
     return;
   }
 
+  const { rows, linhasIgnoradas } = resultado;
+  if (linhasIgnoradas > 0) {
+    console.warn(`[CSV] ${linhasIgnoradas} linha(s) ignorada(s) por não terem o número de colunas esperado.`);
+  }
+
+  csvData = rows;
   construirIndices();
   resetSpinners(false);
 
@@ -485,32 +401,8 @@ function corFibraETubo(numeroStr) {
   return { numeroFibra, corFibra, corFibraNome, tubo, corTubo, corTuboNome };
 }
 
-// ================= FORMATAÇÃO DO TEXTO PARTILHADO =================
-// O texto copiado/partilhado (WhatsApp, SMS, etc.) é sempre reconstruído do
-// zero aqui — só isto é que aparece fora da app, por isso tem de fazer
-// sentido sozinho: título, quando foi feito, e um resumo claro por item
-// (uma linha por campo, em vez de tudo espremido numa única linha com "|").
-const SEPARADOR_PARTILHA = "──────────────";
-
-function statusEmoji(ocupado) {
-  return ocupado ? "🔴" : "🟢";
-}
-
-function agoraFormatado() {
-  return new Date().toLocaleString("pt-PT", {
-    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
-  });
-}
-
-function cabecalhoPartilha(tituloLinha, resumoLinha) {
-  let cab = `🧵 PESQUISA F.O\n${tituloLinha}\n🕒 ${agoraFormatado()}\n${SEPARADOR_PARTILHA}\n`;
-  if (resumoLinha) cab += `${resumoLinha}\n${SEPARADOR_PARTILHA}\n`;
-  return cab;
-}
-
-function rodapePartilha() {
-  return `\n${SEPARADOR_PARTILHA}\nEnviado via app Pesquisa F.O`;
-}
+// cabecalhoPartilha, rodapePartilha, statusEmoji, agoraFormatado e
+// SEPARADOR_PARTILHA vivem agora em shared.js (partilhadas com o Comparar).
 
 // Formata a fibra/tubo de um PDO como texto legível (com nome da cor, não só
 // o código hex que só serve para pintar o ecrã).
@@ -913,32 +805,7 @@ if (checkboxSoLivres) {
 }
 
 // ================= COPIAR / PARTILHAR =================
-btnCopiar.addEventListener("click", async () => {
-  if (!ultimoResultadoTexto) return;
-  try {
-    await navigator.clipboard.writeText(ultimoResultadoTexto);
-    btnCopiar.textContent = "✅ Copiado!";
-    setTimeout(() => (btnCopiar.textContent = "📋 Copiar"), 1500);
-  } catch (e) {
-    alert("Não foi possível copiar automaticamente. Seleciona o texto manualmente.");
-  }
-});
-
-btnPartilhar.addEventListener("click", async () => {
-  if (!ultimoResultadoTexto) return;
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: "Resultado Pesquisa F.O", text: ultimoResultadoTexto });
-    } catch (e) { /* utilizador cancelou */ }
-  } else {
-    try {
-      await navigator.clipboard.writeText(ultimoResultadoTexto);
-      alert("Partilha direta não suportada neste dispositivo. Texto copiado para a área de transferência.");
-    } catch (e) {
-      alert("Partilha não suportada neste dispositivo.");
-    }
-  }
-});
+configurarBotoesPartilha(btnCopiar, btnPartilhar, () => ultimoResultadoTexto, "Resultado Pesquisa F.O");
 
 // ================= HISTÓRICO =================
 function lerHistorico() {
