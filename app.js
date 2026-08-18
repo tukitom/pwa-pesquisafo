@@ -23,6 +23,20 @@ const FIBRA_COLORS = {
   9:"#8B4513",10:"#800080",11:"#FFC0CB",12:"#40E0D0"
 };
 
+// Nomes das cores para usar em texto (partilhado/copiado) — o código hex de
+// FIBRA_COLORS só serve para pintar o "pontinho" no ecrã; em texto simples
+// (WhatsApp, SMS, etc.) isso perde-se todo, por isso precisamos do nome.
+// Formas femininas para "fibra" (a fibra vermelha) e masculinas para "tubo"
+// (o tubo vermelho) — mesma paleta usada na Calculadora.
+const CORES_FIBRA_FEM = {
+  1:"Branca",2:"Vermelha",3:"Verde",4:"Azul",5:"Preta",6:"Amarela",
+  7:"Laranja",8:"Cinzenta",9:"Castanha",10:"Violeta",11:"Rosa",12:"Turquesa"
+};
+const CORES_TUBO_MASC = {
+  1:"Branco",2:"Vermelho",3:"Verde",4:"Azul",5:"Preto",6:"Amarelo",
+  7:"Laranja",8:"Cinzento",9:"Castanho",10:"Violeta",11:"Rosa",12:"Turquesa"
+};
+
 const HISTORY_KEY = "fo_pesquisa_historico";
 const HISTORY_MAX = 20;
 const CSV_STORAGE_KEY = "fo_csv_raw";
@@ -438,14 +452,50 @@ function corFibraETubo(numeroStr) {
   const numeroFibra = parseInt(numeroStr) || 0;
   const corIndexFibra = ((numeroFibra - 1) % 12) + 1;
   const corFibra = FIBRA_COLORS[corIndexFibra] || "#FFF";
+  const corFibraNome = CORES_FIBRA_FEM[corIndexFibra] || "";
   const tubo = Math.floor((numeroFibra - 1) / 12) + 1;
-  const corTubo = FIBRA_COLORS[((tubo - 1) % 12) + 1] || "#FFF";
-  return { numeroFibra, corFibra, tubo, corTubo };
+  const corTuboIndex = ((tubo - 1) % 12) + 1;
+  const corTubo = FIBRA_COLORS[corTuboIndex] || "#FFF";
+  const corTuboNome = CORES_TUBO_MASC[corTuboIndex] || "";
+  return { numeroFibra, corFibra, corFibraNome, tubo, corTubo, corTuboNome };
 }
 
-// Monta uma linha de resultado para um OUT (SRO ou JSO), incluindo a cor/número
-// da fibra e do tubo no PDO, e agrupando todos os portos numa única linha quando
-// o PDO tem o seu próprio splitter (vários portos para a mesma fibra recebida).
+// ================= FORMATAÇÃO DO TEXTO PARTILHADO =================
+// O texto copiado/partilhado (WhatsApp, SMS, etc.) é sempre reconstruído do
+// zero aqui — só isto é que aparece fora da app, por isso tem de fazer
+// sentido sozinho: título, quando foi feito, e um resumo claro por item
+// (uma linha por campo, em vez de tudo espremido numa única linha com "|").
+const SEPARADOR_PARTILHA = "──────────────";
+
+function statusEmoji(ocupado) {
+  return ocupado ? "🔴" : "🟢";
+}
+
+function agoraFormatado() {
+  return new Date().toLocaleString("pt-PT", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function cabecalhoPartilha(tituloLinha, resumoLinha) {
+  let cab = `🧵 PESQUISA F.O\n${tituloLinha}\n🕒 ${agoraFormatado()}\n${SEPARADOR_PARTILHA}\n`;
+  if (resumoLinha) cab += `${resumoLinha}\n${SEPARADOR_PARTILHA}\n`;
+  return cab;
+}
+
+function rodapePartilha() {
+  return `\n${SEPARADOR_PARTILHA}\nEnviado via app Pesquisa F.O`;
+}
+
+// Formata a fibra/tubo de um PDO como texto legível (com nome da cor, não só
+// o código hex que só serve para pintar o ecrã).
+function fibraTuboTexto(numeroStr, label = "Fibra") {
+  const d = corFibraETubo(numeroStr);
+  if (d.numeroFibra <= 0) return "";
+  return `${label}: ${numeroStr} — ${d.corFibraNome} (Tubo ${d.tubo} — ${d.corTuboNome})`;
+}
+
+
 function montarLinhaOut(headerLabel, headerDots, item, statusLabel, statusClass) {
   let headerHtml = escapeHtml(headerLabel);
   if (headerDots) {
@@ -476,9 +526,15 @@ function montarLinhaOut(headerLabel, headerDots, item, statusLabel, statusClass)
   html += `<div class="kv-row"><span class="kv-label">${portosLabel}</span><span class="kv-value">${portosValor}</span></div>`;
   html += `</div>`;
 
-  let texto = `PDO ${item.pdo}`;
-  if (temFibraPdo) texto += ` | Fibra PDO ${item.pdoPtfo} (Tubo ${pdoDots.tubo})`;
-  texto += ` | ${portosLabel} ${portosArray.join(", ") || "?"} | ${statusLabel}`;
+  let texto = `🔌 ${headerLabel}`;
+  if (headerDots && headerDots.numeroFibra > 0) {
+    texto += ` — ${headerDots.corFibraNome} (Tubo ${headerDots.tubo} — ${headerDots.corTuboNome})`;
+  }
+  texto += `\n   Estado: ${statusEmoji(item.ocupado)} ${statusLabel}`;
+  texto += `\n   PDO: ${item.pdo}`;
+  const linhaFibraPdo = fibraTuboTexto(item.pdoPtfo, "Fibra no PDO");
+  if (linhaFibraPdo) texto += `\n   ${linhaFibraPdo}`;
+  texto += `\n   ${portosLabel}: ${portosArray.join(", ") || "?"}`;
 
   return { html, texto };
 }
@@ -530,21 +586,29 @@ function executarPesquisa(guardarHistorico) {
     });
 
     let html = `<div class="result-title">🔌 JSO ${escapeHtml(jso)} · Splitter ${escapeHtml(jsoSplitter)}</div>`;
-    let texto = `RESULTADO JSO ${jso} — Splitter ${jsoSplitter}\n`;
+
+    const totalOuts = Object.keys(outMap).length;
+    const totalOcupados = Object.values(outMap).filter(o => o.ocupado).length;
+    const totalLivres = totalOuts - totalOcupados;
+    const resumo = `🟢 ${totalLivres} livres  ·  🔴 ${totalOcupados} ocupados`;
+    let texto = cabecalhoPartilha(`JSO ${jso} · Splitter ${jsoSplitter}`, resumo);
+    const blocosTexto = [];
 
     Object.keys(outMap)
       .sort((a, b) => parseInt(a) - parseInt(b))
       .forEach(out => {
-        const { corFibra, tubo, corTubo } = corFibraETubo(out);
+        const { corFibra, corFibraNome, tubo, corTubo, corTuboNome, numeroFibra } = corFibraETubo(out);
         const item = outMap[out];
         const statusLabel = item.ocupado ? "Ocupado" : "Livre";
         const statusClass = item.ocupado ? "badge-ocupado" : "badge-livre";
         const { html: itemHtml, texto: itemTexto } = montarLinhaOut(
-          `OUT JSO ${out}`, { corFibra, tubo, corTubo }, item, statusLabel, statusClass
+          `OUT JSO ${out}`, { corFibra, corFibraNome, tubo, corTubo, corTuboNome, numeroFibra }, item, statusLabel, statusClass
         );
         html += itemHtml;
-        texto += `OUT JSO ${out} | ${itemTexto}\n`;
+        blocosTexto.push(itemTexto);
       });
+
+    texto += blocosTexto.join("\n\n") + rodapePartilha();
 
     mostrarResultado(html, texto);
     if (guardarHistorico) guardarNoHistorico(`JSO ${jso} · Splitter ${jsoSplitter}`, { jso, jsoSplitter });
@@ -580,7 +644,13 @@ function executarPesquisa(guardarHistorico) {
     });
 
     let html = `<div class="result-title">🔌 SRO ${escapeHtml(sro)} · Splitter ${escapeHtml(splitter)}</div>`;
-    let texto = `RESULTADO SRO ${sro} — Splitter ${splitter}\n`;
+
+    const totalOuts = Object.keys(outMap).length;
+    const totalOcupados = Object.values(outMap).filter(o => o.ocupado).length;
+    const totalLivres = totalOuts - totalOcupados;
+    const resumo = `🟢 ${totalLivres} livres  ·  🔴 ${totalOcupados} ocupados`;
+    let texto = cabecalhoPartilha(`SRO ${sro} · Splitter ${splitter}`, resumo);
+    const blocosTexto = [];
 
     Object.keys(outMap)
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
@@ -592,8 +662,10 @@ function executarPesquisa(guardarHistorico) {
           `OUT SRO ${out}`, null, item, statusLabel, statusClass
         );
         html += itemHtml;
-        texto += `OUT SRO ${out} | ${itemTexto}\n`;
+        blocosTexto.push(itemTexto);
       });
+
+    texto += blocosTexto.join("\n\n") + rodapePartilha();
 
     mostrarResultado(html, texto);
     if (guardarHistorico) guardarNoHistorico(`SRO ${sro} · Splitter ${splitter}`, { sro, splitter });
@@ -630,7 +702,6 @@ function executarPesquisa(guardarHistorico) {
     });
 
     let html = `<div class="result-title">📦 Todos os Portos — PDO ${escapeHtml(pdo)}</div>`;
-    let texto = `TODOS OS PORTOS — PDO ${pdo}\n`;
 
     const totalPortos = Object.values(grupos).reduce((acc, g) => acc + Object.keys(g.portos).length, 0);
     const totalOcupados = Object.values(grupos).reduce(
@@ -641,13 +712,16 @@ function executarPesquisa(guardarHistorico) {
       + `<span class="badge badge-livre">${totalLivres} livres</span>`
       + `<span class="badge badge-ocupado">${totalOcupados} ocupados</span>`
       + `</div>`;
-    texto += `${totalLivres} livres | ${totalOcupados} ocupados\n\n`;
+
+    const resumo = `🟢 ${totalLivres} livres  ·  🔴 ${totalOcupados} ocupados`;
+    let texto = cabecalhoPartilha(`Todos os Portos — PDO ${pdo}`, resumo);
+    const blocosTexto = [];
 
     Object.values(grupos)
       .sort((a, b) => a.ordem - b.ordem)
       .forEach(g => {
         const portosOrdenados = Object.keys(g.portos).sort((a, b) => parseInt(a) - parseInt(b));
-        const { numeroFibra, corFibra, tubo, corTubo } = corFibraETubo(g.pdoPtfo);
+        const { numeroFibra, corFibra, corFibraNome, tubo, corTubo, corTuboNome } = corFibraETubo(g.pdoPtfo);
 
         const matchSplitter = g.splitter.match(/S(\d+)_(\d+)/);
         const splitterLabel = matchSplitter
@@ -670,8 +744,10 @@ function executarPesquisa(guardarHistorico) {
             + `<span class="dot" style="background:${corTubo}"></span></span></div>`;
         }
 
-        texto += headerTexto + (splitterLabel ? ` (${splitterLabel})` : "")
-          + (numeroFibra > 0 ? ` | Fibra PDO ${g.pdoPtfo} (Tubo ${tubo})` : "") + "\n";
+        let blocoTexto = `📦 ${headerTexto}` + (splitterLabel ? ` — ${splitterLabel}` : "");
+        if (numeroFibra > 0) {
+          blocoTexto += `\n   Fibra no PDO: ${g.pdoPtfo} — ${corFibraNome} (Tubo ${tubo} — ${corTuboNome})`;
+        }
 
         portosOrdenados.forEach(p => {
           const item = g.portos[p];
@@ -681,11 +757,15 @@ function executarPesquisa(guardarHistorico) {
             + `<span class="kv-value"><span class="badge ${statusClass}">${statusLabel}</span>`
             + (item.ocupado && item.idServico ? ` <small style="color:var(--text-dim);">ID ${escapeHtml(item.idServico)}</small>` : "")
             + `</span></div>`;
-          texto += `  Porto ${p} | ${statusLabel}` + (item.ocupado && item.idServico ? ` | ID ${item.idServico}` : "") + "\n";
+          blocoTexto += `\n   Porto ${p}: ${statusEmoji(item.ocupado)} ${statusLabel}`
+            + (item.ocupado && item.idServico ? ` (ID ${item.idServico})` : "");
         });
 
         html += `</div>`;
+        blocosTexto.push(blocoTexto);
       });
+
+    texto += blocosTexto.join("\n\n") + rodapePartilha();
 
     mostrarResultado(html, texto);
     if (guardarHistorico) guardarNoHistorico(`Todos os portos · PDO ${pdo}`, { pdo });
@@ -706,7 +786,13 @@ function executarPesquisa(guardarHistorico) {
   }
 
   let html = `<div class="result-title">📦 PDO ${escapeHtml(pdo)} · Porto ${escapeHtml(porto)}</div>`;
-  let texto = "RESULTADO\n";
+
+  const totalOcupadosPP = rows.filter(r => r["id_servico"] && r["id_servico"].trim() !== "").length;
+  const resumoPP = rows.length > 1
+    ? `🟢 ${rows.length - totalOcupadosPP} livres  ·  🔴 ${totalOcupadosPP} ocupados`
+    : null;
+  let texto = cabecalhoPartilha(`PDO ${pdo} · Porto ${porto}`, resumoPP);
+  const blocosTexto = [];
 
   const otherFieldsSro = ["id_servico", "sro_nome", "sro_splitter", "sro_secundario_pt", "pdo_splitter"];
   const otherFieldsJso = ["id_servico", "jso_nome", "jso_splitter", "jso_ptfo", "pdo_splitter"];
@@ -726,7 +812,7 @@ function executarPesquisa(guardarHistorico) {
     const viaJso = row["jso_nome"] && row["jso_nome"].toUpperCase().startsWith("JSO");
     const otherFields = viaJso ? otherFieldsJso : otherFieldsSro;
 
-    const { numeroFibra, corFibra, tubo, corTubo } = corFibraETubo(row["pdo_ptfo"]);
+    const { numeroFibra, corFibra, corFibraNome, tubo, corTubo, corTuboNome } = corFibraETubo(row["pdo_ptfo"]);
 
     html += `<div class="result-item">`;
     html += `<div class="result-badges">`
@@ -741,21 +827,26 @@ function executarPesquisa(guardarHistorico) {
         + `<small style="color:var(--text-dim);font-weight:400;">Tubo ${tubo}</small> <span class="dot" style="background:${corTubo}"></span></span></div>`;
     }
 
+    let blocoTexto = `${statusEmoji(ocupado)} ${statusLabel}`;
+    if (estado) blocoTexto += `  ·  ${estado}`;
+    if (operadora) blocoTexto += `  ·  ${operadora}`;
+    if (numeroFibra > 0) {
+      blocoTexto += `\n${DISPLAY_NAMES["pdo_ptfo"]}: ${row["pdo_ptfo"]} — ${corFibraNome} (Tubo ${tubo} — ${corTuboNome})`;
+    }
+
     otherFields.forEach(col => {
       const valor = row[col] || "—";
       html += `<div class="kv-row"><span class="kv-label">${DISPLAY_NAMES[col]}</span><span class="kv-value">${escapeHtml(valor)}</span></div>`;
-      texto += `${DISPLAY_NAMES[col]}: ${valor}\n`;
+      if (valor !== "—") blocoTexto += `\n${DISPLAY_NAMES[col]}: ${valor}`;
     });
 
     html += `<button class="ver-portos-link" data-action="ver-portos-pdo" data-pdo="${escapeHtml(pdo)}">📦 Ver todos os portos deste PDO</button>`;
 
-    texto += `${DISPLAY_NAMES["pdo_ptfo"]}: ${row["pdo_ptfo"] || ""}\n`;
-    texto += `Estado Porto: ${estado}\n`;
-    texto += `Operadora: ${operadora}\n`;
-    texto += `Status: ${statusLabel}\n\n`;
-
+    blocosTexto.push(blocoTexto);
     html += `</div>`;
   });
+
+  texto += blocosTexto.join("\n\n") + rodapePartilha();
 
   mostrarResultado(html, texto);
   if (guardarHistorico) guardarNoHistorico(`PDO ${pdo} · Porto ${porto}`, { pdo, porto });
