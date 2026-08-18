@@ -51,7 +51,7 @@
     <button id="btnRepor">↩️ Repor Original</button>
   </div>
   <p style="font-size:12px;color:var(--text-dim);margin-top:8px;">
-    O ficheiro exportado tem a mesma estrutura de "Locais etiquetados.json" — substitui esse
+    O ficheiro exportado tem a mesma estrutura de "locais.json" — substitui esse
     ficheiro no repositório do GitHub para tornar as alterações permanentes para todos.
   </p>
 </div>
@@ -188,7 +188,7 @@
   const mapLegend = document.getElementById("mapLegend");
   const btnModoAdicionar = document.getElementById("btnModoAdicionar");
 
-  let baseFeatures = [];       // pontos originais do ficheiro Locais etiquetados.json
+  let baseFeatures = [];       // pontos originais do ficheiro locais.json
   let overrides = carregarOverrides();
   let marcadoresAtuais = [];   // [{id, nome, tipo, marker, origem}]
   let modoAdicionar = false;
@@ -433,7 +433,7 @@
   }
 
   // ================= CARREGAR DADOS =================
-  fetch("Locais etiquetados.json")
+  fetch("locais.json")
     .then(res => res.json())
     .then(data => {
       baseFeatures = data.features.map(f => ({
@@ -579,12 +579,12 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "Locais etiquetados.json";
+    a.download = "locais.json";
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    alert(`Ficheiro gerado com ${geojson.features.length} pontos. Substitui "Locais etiquetados.json" no GitHub por este ficheiro.`);
+    alert(`Ficheiro gerado com ${geojson.features.length} pontos. Substitui "locais.json" no GitHub por este ficheiro.`);
   });
 
   document.getElementById("btnRepor").addEventListener("click", () => {

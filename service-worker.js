@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pesquisafo-v9';
+const CACHE_NAME = 'pesquisafo-v10';
 
 // Ficheiros do próprio site (mesma origem) — se algum destes falhar a
 // descarregar, a instalação do Service Worker falha toda, por isso só
@@ -12,7 +12,7 @@ const LOCAL_ASSETS = [
   'styles.css',
   'app.js',
   'manifest.json',
-  'Locais etiquetados.json',
+  'locais.json',
   'sw-register.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
@@ -31,6 +31,23 @@ const CDN_ASSETS = [
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
 ];
 
+// Guarda UM ficheiro em cache, tentando novamente se falhar (ligação instável,
+// pedido que corta a meio, etc). Devolve true/false em vez de rebentar —
+// assim, ao contrário de cache.addAll() (que é tudo-ou-nada), a falha de UM
+// ficheiro nunca impede os restantes 11 de ficarem guardados. Isto é o que
+// permite a app abrir offline mesmo que a primeira instalação tenha sido
+// feita com rede fraca/instável.
+async function cacheComRetry(cache, url, opcoes, tentativas = 3) {
+  for (let i = 0; i < tentativas; i++) {
+    try {
+      await cache.add(new Request(url, opcoes));
+      return true;
+    } catch (e) {
+      if (i === tentativas - 1) return false;
+    }
+  }
+}
+
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
@@ -39,10 +56,15 @@ self.addEventListener('install', event => {
       // servidor (GitHub), nunca de uma cópia em cache HTTP do navegador —
       // sem isto, o Service Worker podia "atualizar" mas continuar a guardar
       // versões antigas do app.js/styles.css/etc. lá dentro.
-      const pedidosLocais = LOCAL_ASSETS.map(url => new Request(url, { cache: 'reload' }));
-      await cache.addAll(pedidosLocais);
-      await Promise.allSettled(
-        CDN_ASSETS.map(url => cache.add(new Request(url, { mode: 'no-cors', cache: 'reload' })))
+      const resultadosLocais = await Promise.all(
+        LOCAL_ASSETS.map(url => cacheComRetry(cache, url, { cache: 'reload' }))
+      );
+      resultadosLocais.forEach((ok, i) => {
+        if (!ok) console.warn('[SW] Não foi possível guardar em cache (ficará indisponível offline até à próxima ligação):', LOCAL_ASSETS[i]);
+      });
+
+      await Promise.all(
+        CDN_ASSETS.map(url => cacheComRetry(cache, url, { mode: 'no-cors', cache: 'reload' }))
       );
     })
   );
