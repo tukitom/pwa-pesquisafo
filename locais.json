@@ -22,7 +22,7 @@
         "type": "Point"
       },
       "properties": {
-        "name": "PDO9993 dentro das finanças "
+        "name": "PDO9993"
       },
       "type": "Feature"
     },
@@ -911,17 +911,30 @@
       "type": "Feature"
     },
     {
-      "geometry": {
-        "coordinates": [
-          -31.1299565,
-          39.458989599999995
-        ],
-        "type": "Point"
-      },
+      "type": "Feature",
       "properties": {
-        "name": "PDO1052 e PDO1112"
+        "name": "PDO1052"
       },
-      "type": "Feature"
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -31.1300165,
+          39.4589296
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "PDO1112"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -31.129896499999997,
+          39.45904959999999
+        ]
+      }
     },
     {
       "geometry": {
@@ -1561,17 +1574,17 @@
       "type": "Feature"
     },
     {
+      "type": "Feature",
+      "properties": {
+        "name": "PDO1067"
+      },
       "geometry": {
         "coordinates": [
           -31.126641,
           39.4535202
         ],
         "type": "Point"
-      },
-      "properties": {
-        "name": "PDO1067 mais um de fachada "
-      },
-      "type": "Feature"
+      }
     },
     {
       "geometry": {
@@ -2497,30 +2510,30 @@
       "type": "Feature"
     },
     {
-      "geometry": {
-        "coordinates": [
-          -7.9824782999999995,
-          40.667733899999995
-        ],
-        "type": "Point"
-      },
+      "type": "Feature",
       "properties": {
-        "name": "Casa viatel "
+        "name": "PDO1108"
       },
-      "type": "Feature"
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -31.1255004,
+          39.453949200000004
+        ]
+      }
     },
     {
-      "geometry": {
-        "coordinates": [
-          -31.1254404,
-          39.4540092
-        ],
-        "type": "Point"
-      },
+      "type": "Feature",
       "properties": {
-        "name": "PDO1108 e PDO1187"
+        "name": "PDO1187"
       },
-      "type": "Feature"
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -31.125380399999997,
+          39.4540692
+        ]
+      }
     },
     {
       "geometry": {

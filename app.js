@@ -86,7 +86,8 @@ let idx = {
   bySro: new Map(),
   byJso: new Map(),
   byPdo: new Map(),
-  byPdoPorto: new Map()
+  byPdoPorto: new Map(),
+  byPdoLower: new Map()
 };
 
 const btnLoadCsv = document.getElementById("btnLoadCsv");
@@ -317,6 +318,12 @@ function construirIndices() {
   idx.byJso = new Map();
   idx.byPdo = new Map();
   idx.byPdoPorto = new Map();
+  // Mapeia "pdo1071" -> "PDO1071" (nome real, tal como está no CSV). Serve
+  // para o link vindo do Mapa continuar a funcionar mesmo que o nome do
+  // ponto lá esteja escrito com maiúsculas/minúsculas diferentes (ex:
+  // "Pdo1071" no mapa vs "PDO1071" no CSV) — sem isto, esse link diz
+  // "PDO não encontrado" apesar de o PDO existir.
+  idx.byPdoLower = new Map();
 
   for (const row of csvData) {
     const sro = row["sro_nome"];
@@ -335,6 +342,11 @@ function construirIndices() {
     if (pdo) {
       if (!idx.byPdo.has(pdo)) idx.byPdo.set(pdo, []);
       idx.byPdo.get(pdo).push(row);
+      if (!idx.byPdoLower.has(pdo.toLowerCase())) idx.byPdoLower.set(pdo.toLowerCase(), pdo);
+      // Também sem espaços, para aguentar erros de escrita tipo "PDO 1105"
+      // em vez de "PDO1105" nos pontos do mapa.
+      const semEspacos = pdo.toLowerCase().replace(/\s+/g, "");
+      if (!idx.byPdoLower.has(semEspacos)) idx.byPdoLower.set(semEspacos, pdo);
     }
     if (pdo && porto) {
       const key = pdo + "|||" + porto;
@@ -1036,9 +1048,17 @@ renderizarHistorico();
     alert(`Carrega primeiro um ficheiro CSV para veres o PDO "${pdoParam}".`);
     return;
   }
-  if (!idx.byPdo.has(pdoParam)) {
+  // O nome do ponto no Mapa pode estar escrito com maiúsculas/minúsculas
+  // diferentes do CSV (ex: "Pdo1071" vs "PDO1071") — tenta a correspondência
+  // exata primeiro e só depois, sem distinguir maiúsculas, para não mostrar
+  // "não encontrado" nesses casos.
+  const chaveNormalizada = pdoParam.toLowerCase().trim();
+  const pdoReal = idx.byPdo.has(pdoParam)
+    ? pdoParam
+    : (idx.byPdoLower.get(chaveNormalizada) || idx.byPdoLower.get(chaveNormalizada.replace(/\s+/g, "")));
+  if (!pdoReal) {
     alert(`O PDO "${pdoParam}" não foi encontrado no ficheiro CSV carregado.`);
     return;
   }
-  pesquisarTodosPortosDoPdo(pdoParam);
+  pesquisarTodosPortosDoPdo(pdoReal);
 })();
