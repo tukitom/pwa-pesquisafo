@@ -123,12 +123,30 @@ btnLoadCsv.addEventListener("change", event => {
   textFileName.textContent = `📄 A carregar ${file.name}...`;
   textFileName.classList.remove("loaded");
   const reader = new FileReader();
-  reader.onload = e => carregarCsv(e.target.result, file.name, true);
+  reader.onload = e => {
+    const texto = decodificarTexto(e.target.result);
+    carregarCsv(texto, file.name, true);
+  };
   reader.onerror = () => {
     textFileName.textContent = "❌ Erro a ler o ficheiro.";
   };
-  reader.readAsText(file, "UTF-8");
+  // Lemos como bytes em bruto (não como texto) para podermos decidir nós
+  // próprios a codificação — ver decodificarTexto().
+  reader.readAsArrayBuffer(file);
 });
+
+// Alguns exports (ex: sistemas legados) vêm em ISO-8859-1/Windows-1252 em vez
+// de UTF-8; ler sempre como UTF-8 corrompia acentos (ex: "Serviço" ficava
+// "ServiÃ§o"). Aqui tentamos UTF-8 em modo "fatal" — se o ficheiro tiver bytes
+// que não são UTF-8 válido, cai automaticamente para Windows-1252, que lê
+// corretamente a acentuação latina destes exports.
+function decodificarTexto(buffer) {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+  } catch (e) {
+    return new TextDecoder("windows-1252").decode(buffer);
+  }
+}
 
 if (btnForgetCsv) {
   btnForgetCsv.addEventListener("click", () => {
@@ -162,14 +180,39 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
   const separador = detectarSeparador(lines[0]);
   const headers = parseCsvLine(lines[0], separador).map(h => h.trim());
 
+  // Se faltarem colunas essenciais (ex: ficheiro errado ou exportado de forma
+  // diferente), a pesquisa ficaria sempre vazia sem se perceber porquê —
+  // por isso avisamos já aqui, com o nome das colunas em falta.
+  const colunasEmFalta = requiredCols.filter(c => !headers.includes(c));
+  if (colunasEmFalta.length) {
+    alert(
+      `⚠️ Este ficheiro não parece ser um export válido: faltam ${colunasEmFalta.length} coluna(s) esperada(s):\n\n` +
+      colunasEmFalta.join(", ") +
+      `\n\nVerifica se carregaste o ficheiro certo.`
+    );
+    textFileName.textContent = "❌ Ficheiro com colunas em falta — não foi carregado.";
+    textFileName.classList.remove("loaded");
+    return;
+  }
+
   csvData = [];
+  let linhasIgnoradas = 0;
   for (let i = 1; i < lines.length; i++) {
     const values = parseCsvLine(lines[i], separador);
     if (values.length === headers.length) {
       const row = {};
       for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j];
       csvData.push(row);
+    } else {
+      // Nº de colunas não bate certo com o cabeçalho (ex: separador dentro
+      // de um campo não escapado entre aspas) — a linha é ignorada em vez de
+      // partir a app, mas o utilizador é avisado de que faltam dados.
+      linhasIgnoradas++;
     }
+  }
+
+  if (linhasIgnoradas > 0) {
+    console.warn(`[CSV] ${linhasIgnoradas} linha(s) ignorada(s) por não terem o número de colunas esperado.`);
   }
 
   construirIndices();
@@ -190,7 +233,9 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
 
   popularPdoCompleto();
 
-  textFileName.textContent = `✅ ${nomeFicheiro} — ${csvData.length} linhas carregadas`;
+  textFileName.textContent = linhasIgnoradas > 0
+    ? `⚠️ ${nomeFicheiro} — ${csvData.length} linhas carregadas (${linhasIgnoradas} ignoradas por erro de formato)`
+    : `✅ ${nomeFicheiro} — ${csvData.length} linhas carregadas`;
   textFileName.classList.add("loaded");
   if (labelSoLivres) labelSoLivres.style.display = "flex";
 
@@ -240,7 +285,11 @@ function mostrarAvisoIdadeCsv() {
     const nome = localStorage.getItem(CSV_FILENAME_KEY) || "ficheiro guardado";
     if (guardado) {
       carregarCsv(guardado, nome, false);
-      textFileName.textContent = `✅ ${nome} — ${csvData.length} linhas (restaurado)`;
+      // Só sobrescrevemos a mensagem se o ficheiro guardado passou a validação
+      // (csvData preenchido) — caso contrário fica visível o aviso de erro.
+      if (csvData.length) {
+        textFileName.textContent = `✅ ${nome} — ${csvData.length} linhas (restaurado)`;
+      }
       if (btnForgetCsv) btnForgetCsv.style.display = "inline-block";
     }
   } catch (e) {

@@ -26,7 +26,7 @@
 
   <div class="card">
     <p class="card-title">📄 Ficheiro</p>
-    <input type="file" id="btnLoadCsv" accept=".csv,.txt">
+    <input type="file" id="btnLoadCsv" accept=".csv,.txt" aria-label="Carregar ficheiro CSV">
     <div id="textFileName" class="file-status">Nenhum ficheiro carregado</div>
     <div id="csvAgeWarning" class="csv-age-warning" style="display:none;"></div>
     <button id="btnForgetCsv" class="history-clear" style="display:none;">🗑️ Esquecer ficheiro guardado</button>
@@ -35,11 +35,11 @@
   <div class="card">
     <p class="card-title">🔌 SRO</p>
     <div class="spinner-row">
-      <label>SRO</label>
+      <label for="spinnerSro">SRO</label>
       <select id="spinnerSro"></select>
     </div>
     <div class="spinner-row">
-      <label>Splitter (SRO)</label>
+      <label for="spinnerSplitter">Splitter (SRO)</label>
       <select id="spinnerSplitter">
         <option value="">-- Selecionar --</option>
       </select>
@@ -51,11 +51,11 @@
   <div class="card">
     <p class="card-title">🔌 JSO</p>
     <div class="spinner-row">
-      <label>JSO</label>
+      <label for="spinnerJso">JSO</label>
       <select id="spinnerJso"></select>
     </div>
     <div class="spinner-row">
-      <label>Splitter (JSO)</label>
+      <label for="spinnerJsoSplitter">Splitter (JSO)</label>
       <select id="spinnerJsoSplitter">
         <option value="">-- Selecionar --</option>
       </select>
@@ -67,11 +67,11 @@
   <div class="card">
     <p class="card-title">📦 PDO / Porto</p>
     <div class="spinner-row">
-      <label>PDO</label>
+      <label for="spinnerPdo">PDO</label>
       <select id="spinnerPdo"></select>
     </div>
     <div class="spinner-row">
-      <label>Porto</label>
+      <label for="spinnerPorto">Porto</label>
       <select id="spinnerPorto"></select>
     </div>
   </div>

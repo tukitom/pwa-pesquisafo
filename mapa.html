@@ -142,18 +142,60 @@
       renderizar();
       return;
     }
+    const bloqueio = verificarBloqueioLogin();
+    if (bloqueio) {
+      alert(`Demasiadas tentativas erradas. Tenta novamente daqui a ${bloqueio} minuto(s).`);
+      return;
+    }
+
     const pass = prompt("Password de administrador:");
     if (!pass) return;
     if (sha256Hex(pass) === ADMIN_HASH) {
       isAdmin = true;
-      try { localStorage.setItem(ADMIN_KEY, "1"); } catch (e) {}
+      try {
+        localStorage.setItem(ADMIN_KEY, "1");
+        localStorage.removeItem(TENTATIVAS_KEY);
+      } catch (e) {}
       atualizarUiAdmin();
       renderizar();
       alert("Modo administrador ativado neste dispositivo.");
     } else {
+      registarTentativaFalhada();
       alert("Password incorreta.");
     }
   });
+
+  // Trava tentativas repetidas de adivinhar a password neste dispositivo:
+  // ao fim de 5 tentativas erradas, obriga a esperar 5 minutos antes de deixar
+  // tentar de novo. Nota: isto não é segurança "a sério" (é tudo validado no
+  // browser, sem servidor), só torna o brute-force manual mais lento — quem
+  // tiver acesso à consola do dispositivo continua a conseguir contornar isto.
+  const TENTATIVAS_KEY = "fo_mapa_admin_tentativas";
+  const MAX_TENTATIVAS = 5;
+  const BLOQUEIO_MINUTOS = 5;
+
+  function lerTentativas() {
+    try { return JSON.parse(localStorage.getItem(TENTATIVAS_KEY)) || { count: 0, bloqueadoAte: 0 }; }
+    catch (e) { return { count: 0, bloqueadoAte: 0 }; }
+  }
+
+  function verificarBloqueioLogin() {
+    const t = lerTentativas();
+    if (t.bloqueadoAte && Date.now() < t.bloqueadoAte) {
+      return Math.ceil((t.bloqueadoAte - Date.now()) / 60000);
+    }
+    return 0;
+  }
+
+  function registarTentativaFalhada() {
+    const t = lerTentativas();
+    t.count = (t.count || 0) + 1;
+    if (t.count >= MAX_TENTATIVAS) {
+      t.bloqueadoAte = Date.now() + BLOQUEIO_MINUTOS * 60000;
+      t.count = 0;
+    }
+    try { localStorage.setItem(TENTATIVAS_KEY, JSON.stringify(t)); } catch (e) {}
+  }
 
   // ================= MAPA =================
   const OVERRIDES_KEY = "fo_mapa_overrides";
