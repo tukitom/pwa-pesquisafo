@@ -28,7 +28,7 @@
   <div class="card">
     <p class="card-title">📄 Ficheiro</p>
     <input type="file" id="btnLoadCsv" accept=".csv,.txt" aria-label="Carregar ficheiro CSV">
-    <div id="textFileName" class="file-status">Nenhum ficheiro carregado</div>
+    <div id="textFileName" class="file-status" aria-live="polite">Nenhum ficheiro carregado</div>
     <div id="csvAgeWarning" class="csv-age-warning" style="display:none;"></div>
     <button id="btnForgetCsv" class="history-clear" style="display:none;">🗑️ Esquecer ficheiro guardado</button>
   </div>
@@ -85,7 +85,7 @@
     <span>Mostrar só portos livres</span>
   </label>
 
-  <div id="textResult" class="result-box"></div>
+  <div id="textResult" class="result-box" aria-live="polite"></div>
   <div class="result-actions" id="resultActions" style="display:none;">
     <button id="btnCopiar">📋 Copiar</button>
     <button id="btnPartilhar">📤 Partilhar</button>

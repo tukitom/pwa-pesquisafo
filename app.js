@@ -210,6 +210,7 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
     return;
   }
 
+  const csvDataAnterior = csvData;
   csvData = [];
   let linhasIgnoradas = 0;
   for (let i = 1; i < lines.length; i++) {
@@ -230,13 +231,25 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
     console.warn(`[CSV] ${linhasIgnoradas} linha(s) ignorada(s) por não terem o número de colunas esperado.`);
   }
 
+  // Ficheiro só com cabeçalho (ou onde todas as linhas de dados foram
+  // ignoradas por má formação) — mantém os dados anteriores em vez de
+  // apagar uma pesquisa que já estava a funcionar, e avisa claramente
+  // em vez de mostrar "0 linhas carregadas" com um ✅ como se estivesse tudo bem.
+  if (csvData.length === 0) {
+    csvData = csvDataAnterior;
+    alert("Este ficheiro não tem nenhuma linha de dados válida (só o cabeçalho, ou todas as linhas estão mal formadas). O ficheiro anterior foi mantido.");
+    textFileName.textContent = "❌ Ficheiro sem dados válidos — não foi carregado.";
+    textFileName.classList.remove("loaded");
+    return;
+  }
+
   construirIndices();
   resetSpinners(false);
 
   // SRO
   const sros = [...idx.bySro.keys()].sort();
   spinnerSro.innerHTML = `<option value="">-- Selecionar --</option>` +
-    sros.map(s => `<option>${s}</option>`).join("");
+    sros.map(s => `<option>${escapeHtml(s)}</option>`).join("");
 
   // JSO
   const jsos = [...idx.byJso.keys()]
@@ -244,7 +257,7 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
     .sort();
 
   spinnerJso.innerHTML = `<option value="">-- Selecionar --</option>` +
-    jsos.map(j => `<option>${j}</option>`).join("");
+    jsos.map(j => `<option>${escapeHtml(j)}</option>`).join("");
 
   popularPdoCompleto();
 
@@ -371,7 +384,7 @@ function ordenarNumerico(lista) {
 function popularPdoCompleto() {
   const pdosTodos = ordenarNumerico([...idx.byPdo.keys()]);
   spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>` +
-    pdosTodos.map(p => `<option>${p}</option>`).join("");
+    pdosTodos.map(p => `<option>${escapeHtml(p)}</option>`).join("");
   spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 }
 
@@ -393,7 +406,7 @@ function handleSroChange() {
   const pdosUnicos = ordenarNumerico([...new Set(rows.map(d => d["pdo_nome"]).filter(Boolean))]);
 
   spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>` +
-    pdosUnicos.map(p => `<option>${p}</option>`).join("");
+    pdosUnicos.map(p => `<option>${escapeHtml(p)}</option>`).join("");
   spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
   preencherSplitters(rows, "sro_splitter", spinnerSplitter);
@@ -417,7 +430,7 @@ function handleJsoChange() {
   const pdosUnicos = ordenarNumerico([...new Set(rows.map(d => d["pdo_nome"]).filter(Boolean))]);
 
   spinnerPdo.innerHTML = `<option value="">-- Selecionar --</option>` +
-    pdosUnicos.map(p => `<option>${p}</option>`).join("");
+    pdosUnicos.map(p => `<option>${escapeHtml(p)}</option>`).join("");
   spinnerPorto.innerHTML = `<option value="">-- Selecionar --</option>`;
 
   preencherSplitters(rows, "jso_splitter", spinnerJsoSplitter);
@@ -444,7 +457,7 @@ function preencherSplitters(rows, campoSplitter, spinner) {
       return numA - numB;
     });
 
-  spinner.innerHTML += splittersUnicos.map(s => `<option>${s}</option>`).join("");
+  spinner.innerHTML += splittersUnicos.map(s => `<option>${escapeHtml(s)}</option>`).join("");
 }
 
 // ================= PORTOS =================
@@ -457,7 +470,7 @@ function updatePortos() {
   const portos = rows.map(d => d["porto_pdo"]).filter(Boolean)
     .sort((a, b) => parseInt(a) - parseInt(b));
 
-  spinnerPorto.innerHTML += [...new Set(portos)].map(p => `<option>${p}</option>`).join("");
+  spinnerPorto.innerHTML += [...new Set(portos)].map(p => `<option>${escapeHtml(p)}</option>`).join("");
 }
 
 function corFibraETubo(numeroStr) {
@@ -966,7 +979,7 @@ function renderizarHistorico() {
     return;
   }
   historyList.innerHTML = historico.map((h, i) => `
-    <div class="history-item" data-index="${i}">
+    <div class="history-item" data-index="${i}" tabindex="0" role="button">
       <div>${escapeHtml(h.label)}<small>${formatarData(h.ts)}</small></div>
       <span>↺</span>
     </div>
@@ -977,6 +990,13 @@ function renderizarHistorico() {
       const i = parseInt(el.dataset.index);
       repetirPesquisa(historico[i]);
     });
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const i = parseInt(el.dataset.index);
+        repetirPesquisa(historico[i]);
+      }
+    });
   });
 }
 
@@ -986,6 +1006,19 @@ function repetirPesquisa(item) {
     return;
   }
   const c = item.criteria;
+
+  // O ficheiro CSV pode ter sido substituído por um mais recente (ou de
+  // outra área) desde que esta pesquisa foi guardada — sem esta verificação,
+  // o utilizador via um erro confuso ("Seleciona PDO e Porto...") em vez de
+  // perceber que o item do histórico é que já não existe.
+  const existeAinda =
+    (c.sro && idx.bySro.has(c.sro)) ||
+    (c.jso && idx.byJso.has(c.jso)) ||
+    (c.pdo && idx.byPdo.has(c.pdo));
+  if (!existeAinda) {
+    alert("Este item do histórico já não existe no ficheiro CSV atual (pode ter sido substituído por um mais recente).");
+    return;
+  }
 
   resetSelects();
 

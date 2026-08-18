@@ -23,15 +23,15 @@
   <button class="primary hero-cta" onclick="window.location.href='app.html'">🔍 Iniciar Pesquisa</button>
 
   <div class="hero-grid">
-    <div class="hero-tile" onclick="window.location.href='app.html'">
+    <div class="hero-tile" tabindex="0" role="button" onclick="window.location.href='app.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='app.html';}">
       <span class="hero-tile-icon">📂</span>
       <span class="hero-tile-label">Pesquisa</span>
     </div>
-    <div class="hero-tile" onclick="window.location.href='mapa.html'">
+    <div class="hero-tile" tabindex="0" role="button" onclick="window.location.href='mapa.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='mapa.html';}">
       <span class="hero-tile-icon">🗺️</span>
       <span class="hero-tile-label">Mapa</span>
     </div>
-    <div class="hero-tile" onclick="window.location.href='calculadora.html'">
+    <div class="hero-tile" tabindex="0" role="button" onclick="window.location.href='calculadora.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();window.location.href='calculadora.html';}">
       <span class="hero-tile-icon">🎨</span>
       <span class="hero-tile-label">Calculadora</span>
     </div>
