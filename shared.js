@@ -83,7 +83,17 @@ function decodificarTexto(buffer) {
 // nunca lança exceção, para o chamador poder sempre mostrar uma mensagem
 // clara em vez de a app rebentar.
 function parseCsvGenerico(texto, colunasObrigatorias) {
-  const lines = texto.split(/\r?\n/).filter(l => l.trim() !== "");
+  const lines = [];
+  let record = '', quoted = false;
+  for (let i=0;i<texto.length;i++) {
+    const ch=texto[i];
+    if(ch==='"') { if(quoted && texto[i+1]==='"'){record+='""';i++;continue;} quoted=!quoted; }
+    if((ch==='\n'||ch==='\r')&&!quoted){if(record.trim())lines.push(record);record='';if(ch==='\r'&&texto[i+1]==='\n')i++;}
+    else record+=ch;
+  }
+  // An incomplete quoted record is rejected, never silently accepted.
+  const incomplete = quoted ? 1 : 0;
+  if(record.trim()&&!quoted)lines.push(record);
   if (!lines.length) return { erro: "vazio" };
 
   const separador = detectarSeparador(lines[0]);
@@ -93,7 +103,7 @@ function parseCsvGenerico(texto, colunasObrigatorias) {
   if (colunasEmFalta.length) return { erro: "colunas", colunasEmFalta };
 
   const rows = [];
-  let linhasIgnoradas = 0;
+  let linhasIgnoradas = incomplete;
   for (let i = 1; i < lines.length; i++) {
     const values = parseCsvLine(lines[i], separador);
     if (values.length === headers.length) {

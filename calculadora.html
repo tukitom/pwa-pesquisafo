@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Calculadora de Cores</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="modern.css">
 </head>
 <body>
 <header>
@@ -23,14 +24,16 @@
     <button onclick="window.location.href='comparar.html'">🔀 Comparar</button>
   </nav>
 </header>
+<script src="ui.js"></script>
 
 <main>
+<div class="page-heading"><h1>Cores da fibra</h1><p>Identifica a fibra e o tubo, de 1 a 288.</p></div>
   <div class="card">
     <p class="card-title">🎨 Calcular Cor da Fibra</p>
-    <label for="editFibra" class="visually-hidden">Número da Fibra</label>
-    <input id="editFibra" type="number" placeholder="Número da Fibra (1-288)" min="1" max="288">
+    <label for="editFibra" >Número da Fibra</label>
+    <input id="editFibra" type="number" inputmode="numeric" step="1" aria-describedby="colorError" placeholder="Número da Fibra (1-288)" min="1" max="288">
     <button id="btnCalcularCor" class="primary">Calcular</button>
-    <div id="textCorResult"></div>
+    <p id="colorError" class="inline-feedback" role="alert"></p><div id="textCorResult" aria-live="polite"></div>
   </div>
 
   <div class="card">
@@ -41,8 +44,8 @@
 </main>
 
 <!-- jsPDF para exportar -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/html2canvas.min.js"></script>
 
 <script>
 const fibraColors = {
@@ -51,11 +54,15 @@ const fibraColors = {
 };
 
 document.getElementById("btnCalcularCor").onclick = () => {
-  const numero = parseInt(document.getElementById("editFibra").value);
-  if (!numero || numero < 1 || numero > 288) {
-    alert("Insira um número válido (1-288).");
+  const numero = Number(document.getElementById("editFibra").value);
+  if (!Number.isInteger(numero) || numero < 1 || numero > 288) {
+    document.getElementById("colorError").textContent="Introduz um número inteiro entre 1 e 288.";
+    document.getElementById("editFibra").setAttribute("aria-invalid","true");
+    document.getElementById("textCorResult").replaceChildren();
     return;
   }
+  document.getElementById("colorError").textContent="";
+  document.getElementById("editFibra").removeAttribute("aria-invalid");
   const corIndexFibra = ((numero - 1) % 12) + 1;
   const corFibra = fibraColors[corIndexFibra];
   const tubo = Math.floor((numero - 1) / 12) + 1;
@@ -64,11 +71,11 @@ document.getElementById("btnCalcularCor").onclick = () => {
     <div class="color-result">
       <div class="cr-item">
         <div class="dot-lg" style="background:${corFibra}"></div>
-        <span class="cr-label">Fibra ${numero}</span>
+        <span class="cr-label">Fibra ${numero} · ${cores[corIndexFibra-1][0]}</span>
       </div>
       <div class="cr-item">
         <div class="dot-lg" style="background:${corTubo}"></div>
-        <span class="cr-label">Tubo ${tubo}</span>
+        <span class="cr-label">Tubo ${tubo} · ${cores[(tubo-1)%12][0]}</span>
       </div>
     </div>`;
 };
@@ -86,8 +93,8 @@ const cores = [
   ["Preto","#000000","PR"],
   ["Amarelo","#FFFF00","AM"],
   ["Laranja","#FFA500","LR"],
-  ["Cinza","#808080","CZ"],
-  ["Marrom","#8B4513","CT"],
+  ["Cinzento","#808080","CZ"],
+  ["Castanho","#8B4513","CT"],
   ["Violeta","#800080","VT"],
   ["Rosa","#FFC0CB","RS"],
   ["Turquesa","#40E0D0","TQ"]
@@ -119,6 +126,7 @@ gerarTabela();
 
 // === EXPORTAR PARA PDF ===
 document.getElementById("btnPDF").addEventListener("click", async () => {
+  if(!window.jspdf||!window.html2canvas){document.getElementById("colorError").textContent="A exportação PDF precisa de carregar os recursos com internet pelo menos uma vez. Volta a abrir esta página com ligação.";return;}
   const btn = document.getElementById("btnPDF");
   const original = btn.textContent;
   btn.textContent = "⏳ A gerar PDF...";

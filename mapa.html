@@ -11,8 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Mapa Interativo FO Flores</title>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="modern.css">
 </head>
 <body>
 <header>
@@ -24,14 +25,16 @@
     <button onclick="window.location.href='comparar.html'">🔀 Comparar</button>
   </nav>
 </header>
+<script src="ui.js"></script>
 
+<div class="page-heading"><h1>Mapa da rede</h1><p>Localiza equipamentos e abre a respetiva pesquisa.</p></div>
 <div class="card" style="position:relative;">
   <div id="searchBox">
-    <input id="searchInput" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
-    <button id="btnSearch" style="width:auto;flex-shrink:0;">🔍</button>
+    <input id="searchInput" aria-label="Pesquisar equipamento no mapa" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
+    <button id="btnSearch" aria-label="Pesquisar no mapa" style="width:auto;flex-shrink:0;">🔍</button>
   </div>
   <div id="searchSuggestions" class="search-suggestions" style="display:none;"></div>
-  <select id="filterSelect">
+  <select id="filterSelect" aria-label="Tipo de equipamento">
     <option value="todos">Todos os locais</option>
     <option value="pdo">Só PDOs</option>
     <option value="jfo">Só Juntas</option>
@@ -60,7 +63,7 @@
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.js"></script>
+<script src="vendor/maplibre-gl.js"></script>
 <script>
   // ================= SHA-256 (implementação própria, sem depender de HTTPS/crypto.subtle) =================
   function sha256Hex(str) {
@@ -202,6 +205,8 @@
   // ================= MAPA =================
   const OVERRIDES_KEY = "fo_mapa_overrides";
 
+  if(typeof maplibregl==='undefined'){document.getElementById('mapStatus').textContent='Não foi possível carregar o mapa. Liga-te à internet e volta a abrir esta página.';document.getElementById('map').hidden=true;document.getElementById('btnAdminLogin').disabled=true;document.getElementById('btnSearch').disabled=true;document.getElementById('filterSelect').disabled=true;}
+  else {
   const map = new maplibregl.Map({
     container: 'map',
     style: {
@@ -638,6 +643,7 @@
     guardarOverrides();
     renderizar();
   });
+}
 </script>
 <script src="sw-register.js"></script>
 </body>
