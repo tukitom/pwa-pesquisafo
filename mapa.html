@@ -11,9 +11,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Mapa Interativo FO Flores</title>
-<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="modern.css">
 </head>
 <body>
 <header>
@@ -25,16 +24,14 @@
     <button onclick="window.location.href='comparar.html'">🔀 Comparar</button>
   </nav>
 </header>
-<script src="ui.js"></script>
 
-<div class="page-heading"><h1>Mapa da rede</h1><p>Localiza equipamentos e abre a respetiva pesquisa.</p></div>
 <div class="card" style="position:relative;">
   <div id="searchBox">
-    <input id="searchInput" aria-label="Pesquisar equipamento no mapa" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
-    <button id="btnSearch" aria-label="Pesquisar no mapa" style="width:auto;flex-shrink:0;">🔍</button>
+    <input id="searchInput" type="text" placeholder="Ex: PDO1001, JFO1001 ou SRO1001...">
+    <button id="btnSearch" style="width:auto;flex-shrink:0;">🔍</button>
   </div>
   <div id="searchSuggestions" class="search-suggestions" style="display:none;"></div>
-  <select id="filterSelect" aria-label="Tipo de equipamento">
+  <select id="filterSelect">
     <option value="todos">Todos os locais</option>
     <option value="pdo">Só PDOs</option>
     <option value="jfo">Só Juntas</option>
@@ -61,9 +58,9 @@
   </p>
 </div>
 
-<p id="offlineMapStatus" class="quick-help" role="status">A carregar cartografia local...</p><div id="map"></div>
+<div id="map"></div>
 
-<script src="vendor/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.18.0/dist/maplibre-gl.js"></script>
 <script>
   // ================= SHA-256 (implementação própria, sem depender de HTTPS/crypto.subtle) =================
   function sha256Hex(str) {
@@ -205,18 +202,32 @@
   // ================= MAPA =================
   const OVERRIDES_KEY = "fo_mapa_overrides";
 
-  if(typeof L==='undefined'){document.getElementById('mapStatus').textContent='Não foi possível carregar o mapa. Liga-te à internet e volta a abrir esta página.';document.getElementById('map').hidden=true;document.getElementById('btnAdminLogin').disabled=true;document.getElementById('btnSearch').disabled=true;document.getElementById('filterSelect').disabled=true;}
-  else {
-  const map=L.map('map',{minZoom:10,maxZoom:20,zoomControl:true}).setView([39.454,-31.20],12);
-  L.control.scale({imperial:false}).addTo(map);
-  map.attributionControl.setPrefix(false);
-  map.attributionControl.addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · ODbL');
-  const locate=L.control({position:'topleft'});locate.onAdd=()=>{const button=L.DomUtil.create('button','locate-button');button.textContent='◎';button.title='A minha localização';button.setAttribute('aria-label','A minha localização');L.DomEvent.disableClickPropagation(button);button.onclick=()=>map.locate({setView:true,maxZoom:16,enableHighAccuracy:true});return button;};locate.addTo(map);
-  let locationMarker;map.on('locationfound',e=>{if(locationMarker)map.removeLayer(locationMarker);locationMarker=L.circleMarker(e.latlng,{radius:8,color:'#fff',fillColor:'#0867ae',fillOpacity:1}).addTo(map);});map.on('locationerror',()=>{document.getElementById('mapStatus').style.display='block';document.getElementById('mapStatus').textContent='Localização indisponível. Podes continuar a pesquisar no mapa.';});
-  fetch('offline-map/flores.json').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{
-    L.geoJSON(data,{style:f=>f.properties.kind==='land'?{color:'#749a89',weight:1,fillColor:'#e8ede4',fillOpacity:1}:f.properties.kind==='water'?{color:'#58a0c1',weight:1,fillColor:'#9dcde0',fillOpacity:1}:f.properties.kind==='coast'?{color:'#377b99',weight:2}: {color:['primary','secondary','tertiary'].includes(f.properties.highway)?'#bd873f':'#8d9e92',weight:['primary','secondary','tertiary'].includes(f.properties.highway)?3:1.3},pointToLayer:(f,p)=>L.circleMarker(p,{radius:2,color:'#43514b'}),onEachFeature:(f,layer)=>{if(f.properties.name)layer.bindTooltip(escapeHtml(f.properties.name),{permanent:f.geometry.type==='Point',direction:'top',className:'place-label'});}}).addTo(map);
-    document.getElementById('offlineMapStatus').textContent='Cartografia das Flores guardada nesta versão · estradas, costa e localidades';
-  }).catch(()=>{document.getElementById('offlineMapStatus').textContent='Cartografia indisponível. Os equipamentos continuam disponíveis; verifica a preparação offline.';});
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      sources: {
+        google: {
+          type: 'raster',
+          tiles: ['https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'],
+          tileSize: 256,
+          attribution: '© Google Maps'
+        }
+      },
+      layers: [{ id: 'google-hybrid', type: 'raster', source: 'google', minzoom: 0, maxzoom: 22 }]
+    },
+    center: [-31.13, 39.454],
+    zoom: 13,
+    attributionControl: true
+  });
+
+  map.addControl(new maplibregl.NavigationControl());
+  map.addControl(new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+    trackUserLocation: true,
+    showUserHeading: true
+  }));
+
   const mapStatus = document.getElementById("mapStatus");
   const mapLegend = document.getElementById("mapLegend");
   const btnModoAdicionar = document.getElementById("btnModoAdicionar");
@@ -319,16 +330,17 @@
       if (grupo.length === 1) {
         const ponto = grupo[0];
         const cor = corPorTipo(ponto.tipo);
-        const popup = L.popup({ closeButton: true, closeOnClick: false })
-          .setContent(popupHtml(ponto));
+        const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: false })
+          .setHTML(popupHtml(ponto));
 
-        const marker = L.marker([ponto.lat,ponto.lng],{draggable:isAdmin,icon:L.divIcon({className:"equipment-marker",html:`<span style="background:${cor}"></span>`,iconSize:[24,24],iconAnchor:[12,12]})})
-          .bindPopup(popup)
+        const marker = new maplibregl.Marker({ color: cor, draggable: isAdmin })
+          .setLngLat([ponto.lng, ponto.lat])
+          .setPopup(popup)
           .addTo(map);
 
         if (isAdmin) {
           marker.on("dragend", () => {
-            const pos = marker.getLatLng();
+            const pos = marker.getLngLat();
             guardarPosicao(ponto, pos.lat, pos.lng);
           });
         }
@@ -339,11 +351,12 @@
         const centroLng = grupo.reduce((a, p) => a + p.lng, 0) / grupo.length;
         const el = criarElementoCluster(grupo);
 
-        const marker = L.marker([centroLat,centroLng],{icon:L.divIcon({className:"cluster-icon",html:el,iconSize:[40,40]})})
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([centroLng, centroLat])
           .addTo(map);
 
         el.addEventListener("click", () => {
-          map.flyTo([centroLat,centroLng],Math.max(zoomAtual+3,CLUSTER_ZOOM_THRESHOLD+1));
+          map.flyTo({ center: [centroLng, centroLat], zoom: Math.max(zoomAtual + 3, CLUSTER_ZOOM_THRESHOLD + 0.5) });
         });
 
         marcadoresAtuais.push({
@@ -364,7 +377,7 @@
   function calcularClusters(pontos) {
     const grupos = [];
     const usados = new Array(pontos.length).fill(false);
-    const projetados = pontos.map(p => map.latLngToContainerPoint([p.lat,p.lng]));
+    const projetados = pontos.map(p => map.project([p.lng, p.lat]));
 
     for (let i = 0; i < pontos.length; i++) {
       if (usados[i]) continue;
@@ -476,12 +489,12 @@
 
       const lista = montarListaFinal();
       mapStatus.textContent = `${lista.length} locais carregados`;
-
+      setTimeout(() => { mapStatus.style.display = "none"; }, 2500);
 
       if (lista.length) {
-        const bounds = L.latLngBounds();
-        lista.forEach(p => bounds.extend([p.lat, p.lng]));
-        map.fitBounds(bounds, { padding: [30,30], maxZoom: 15, animate: false });
+        const bounds = new maplibregl.LngLatBounds();
+        lista.forEach(p => bounds.extend([p.lng, p.lat]));
+        map.fitBounds(bounds, { padding: 50, maxZoom: 15, duration: 0 });
       }
     })
     .catch(() => {
@@ -501,7 +514,7 @@
       const encontrado = marcadoresAtuais.find(m => m.id === alvo.id);
       if (encontrado) encontrado.marker.togglePopup();
     });
-    map.flyTo([alvo.lat,alvo.lng],zoomAlvo);
+    map.flyTo({ center: [alvo.lng, alvo.lat], zoom: zoomAlvo, speed: 0.8 });
   }
 
   function pesquisarPorTermo(termo) {
@@ -568,7 +581,7 @@
     modoAdicionar = !modoAdicionar;
     btnModoAdicionar.classList.toggle("active", modoAdicionar);
     btnModoAdicionar.textContent = modoAdicionar ? "✅ Toca no mapa para adicionar" : "➕ Adicionar Ponto";
-    map.getContainer().style.cursor = modoAdicionar ? "crosshair" : "";
+    map.getCanvas().style.cursor = modoAdicionar ? "crosshair" : "";
   });
 
   map.on("click", (e) => {
@@ -583,8 +596,8 @@
     overrides.added.push({
       id: "added-" + Date.now(),
       nome: nomeFinal,
-      lat: e.latlng.lat,
-      lng: e.latlng.lng
+      lat: e.lngLat.lat,
+      lng: e.lngLat.lng
     });
     guardarOverrides();
     renderizar();
@@ -625,7 +638,6 @@
     guardarOverrides();
     renderizar();
   });
-}
 </script>
 <script src="sw-register.js"></script>
 </body>

@@ -12,7 +12,6 @@
 <meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Pesquisa F.O</title>
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="modern.css">
 </head>
 <body>
 <header>
@@ -24,22 +23,18 @@
     <button onclick="window.location.href='comparar.html'">🔀 Comparar</button>
   </nav>
 </header>
-<script src="ui.js"></script>
 
-<main id="app">
-<div class="page-heading"><h1>Pesquisar na rede</h1><p>Encontra equipamentos, fibras e portos.</p></div>
-<div class="search-layout"><section aria-label="Pesquisa e filtros">
+<div id="app">
 
   <div class="card">
-    <p class="card-title">Dados da consulta</p>
+    <p class="card-title">📄 Ficheiro</p>
     <input type="file" id="btnLoadCsv" accept=".csv,.txt" aria-label="Carregar ficheiro CSV">
     <div id="textFileName" class="file-status" aria-live="polite">Nenhum ficheiro carregado</div>
-    <div id="importFeedback" class="inline-feedback" role="status"></div><div id="datasetSummary" class="dataset-summary"></div>
     <div id="csvAgeWarning" class="csv-age-warning" style="display:none;"></div>
     <button id="btnForgetCsv" class="history-clear" style="display:none;">🗑️ Esquecer ficheiro guardado</button>
   </div>
 
-<div class="card"><label for="quick-search" class="card-title">Pesquisa rápida</label><input id="quick-search" type="text" placeholder="Nome do PDO, SRO ou JSO" autocomplete="off" aria-controls="quick-options"><p class="quick-help">Escreve parte do nome e seleciona um equipamento.</p><div id="quick-options" class="quick-options" aria-live="polite"></div></div><details class="advanced-filters"><summary>Pesquisa por filtros</summary><div class="card">
+  <div class="card">
     <p class="card-title">🔌 SRO</p>
     <div class="spinner-row">
       <label for="spinnerSro">SRO</label>
@@ -84,20 +79,17 @@
   </div>
 
   <button id="btnPesquisar" class="primary">🔍 Pesquisar</button>
+  <button id="btnLimparTudo">🧹 Limpar Tudo</button>
 
-
-</details><button id="btnLimparTudo" class="secondary-action">Limpar pesquisa</button></section><section aria-label="Resultados">
   <label class="checkbox-row" id="labelSoLivres" style="display:none;">
     <input type="checkbox" id="checkboxSoLivres">
-    <span>Mostrar só portos sem serviço</span>
+    <span>Mostrar só portos livres</span>
   </label>
 
-<p class="quick-help">Sem serviço associado não garante disponibilidade para instalação.</p>
-  <p id="filter-empty" class="inline-feedback" role="status" hidden>Nenhum porto sem serviço nesta pesquisa. Desativa o filtro para ver todos.</p>
-  <div id="textResult" class="result-box" aria-live="polite" tabindex="-1"></div>
+  <div id="textResult" class="result-box" aria-live="polite"></div>
   <div class="result-actions" id="resultActions" style="display:none;">
-    <button id="btnCopiar">Copiar resultado completo</button>
-    <button id="btnPartilhar">Partilhar resultado completo</button>
+    <button id="btnCopiar">📋 Copiar</button>
+    <button id="btnPartilhar">📤 Partilhar</button>
   </div>
 
   <div class="card" id="historyCard" style="margin-top:16px;">
@@ -107,11 +99,10 @@
     <div id="historyList"></div>
   </div>
 
-</section></div></main>
+</div>
 
 <script src="shared.js"></script>
 <script src="app.js" charset="UTF-8"></script>
-<script src="quick-search.js"></script>
 <script src="sw-register.js"></script>
 </body>
 </html>

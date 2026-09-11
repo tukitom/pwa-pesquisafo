@@ -1,15 +1,48 @@
-(() => {
-  const status=document.createElement('div');status.className='pwa-status';status.setAttribute('role','status');
-  const label=document.createElement('span');label.textContent='A preparar utilização offline…';
-  const check=document.createElement('button');check.textContent='Verificar atualização';status.append(label,check);document.body.append(status);
-  if(!('serviceWorker' in navigator)||!window.isSecureContext){label.textContent='O modo offline precisa de HTTPS ou localhost.';check.disabled=true;return;}
-  let reg,updating=false;
-  function inspect(){const worker=navigator.serviceWorker.controller||reg?.active;if(!worker)return;const channel=new MessageChannel();channel.port1.onmessage=e=>{label.textContent=e.data.ready?'Versão '+e.data.version+' · pronta offline':'Preparação offline incompleta. Volta a verificar com ligação.';channel.port1.close();};worker.postMessage({type:'STATUS'},[channel.port2]);}
-  function offer(){if(!reg?.waiting)return;let banner=document.getElementById('pwa-update-banner');if(banner)return;banner=document.createElement('div');banner.id='pwa-update-banner';banner.setAttribute('role','status');const text=document.createElement('span');text.textContent='Nova versão descarregada e pronta para instalar.';const button=document.createElement('button');button.id='pwaUpdateBtn';button.textContent='Atualizar agora';button.onclick=()=>{const worker=reg.waiting;if(!worker){location.reload();return;}updating=true;button.disabled=true;worker.postMessage({type:'SKIP_WAITING'});setTimeout(()=>{button.disabled=false;button.textContent='Reabrir aplicação';button.onclick=()=>location.reload();},8000);};banner.append(text,button);document.body.append(banner);}
-  function watch(worker){if(!worker)return;worker.addEventListener('statechange',()=>{if(worker.state==='installed'){offer();inspect();}if(worker.state==='redundant')label.textContent='Não foi possível concluir a atualização. A versão anterior foi mantida.';});}
-  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updating)location.reload();else{inspect();if(document.getElementById('pwa-update-banner'))location.reload();}});
-  async function update(){if(!reg)return;if(!navigator.onLine){label.textContent='Sem ligação: podes usar a versão instalada. Atualizações precisam de ligação.';return;}check.disabled=true;try{await reg.update();offer();inspect();}catch{label.textContent='Não foi possível verificar a atualização. Tenta novamente com ligação.';}finally{check.disabled=false;}}
-  check.onclick=update;
-  navigator.serviceWorker.register('service-worker.js',{updateViaCache:'none'}).then(r=>{reg=r;reg.addEventListener('updatefound',()=>watch(reg.installing));watch(reg.installing);offer();navigator.serviceWorker.ready.then(inspect);update();}).catch(()=>{label.textContent='Não foi possível preparar o modo offline. Verifica a ligação e volta a abrir.';check.onclick=()=>location.reload();});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')update();});window.addEventListener('online',update);
-})();
+if ('serviceWorker' in navigator) {
+  // Guarda se já havia um Service Worker a controlar a página quando esta
+  // abriu — assim distinguimos "primeira instalação" de "atualização real".
+  let controladorInicial = navigator.serviceWorker.controller;
+  let avisoJaMostrado = false;
+
+  window.addEventListener('load', () => {
+    // updateViaCache: 'none' garante que o navegador nunca usa uma cópia em
+    // cache HTTP do próprio service-worker.js — sem isto, pode continuar a
+    // achar que estamos na versão antiga mesmo depois de a teres substituído
+    // no GitHub, porque está a comparar contra um ficheiro desatualizado.
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(reg => {
+      // Verifica logo ao abrir a app — o "visibilitychange" só dispara em
+      // mudanças de estado (esconder/mostrar), nunca na primeira abertura.
+      reg.update().catch(() => {});
+
+      // E também sempre que a app volta a ficar em primeiro plano.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  });
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!controladorInicial) {
+      // Esta foi a primeira instalação da app neste dispositivo, não uma atualização.
+      controladorInicial = navigator.serviceWorker.controller;
+      return;
+    }
+    if (avisoJaMostrado) return;
+    avisoJaMostrado = true;
+    mostrarAvisoNovaVersao();
+  });
+}
+
+function mostrarAvisoNovaVersao() {
+  const banner = document.createElement('div');
+  banner.id = 'pwa-update-banner';
+  banner.innerHTML = `
+    <span>🔄 Há uma nova versão da app disponível</span>
+    <button id="pwaUpdateBtn">Atualizar</button>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('pwaUpdateBtn').addEventListener('click', () => {
+    window.location.reload();
+  });
+}

@@ -1,71 +1,43 @@
 {
-  "id": "./",
+  "id": "/pesquisafo/",
   "name": "Pesquisa F.O",
   "short_name": "PesquisaFO",
   "description": "Pesquisa de fibra óptica, mapa de locais e calculadora de cores de fibra",
-  "start_url": "app.html",
+  "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#14161a",
   "theme_color": "#14161a",
   "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
     {
       "name": "Pesquisa",
       "short_name": "Pesquisa",
       "url": "app.html",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "1024x1024"
-        }
-      ]
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Mapa",
       "short_name": "Mapa",
       "url": "mapa.html",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "1024x1024"
-        }
-      ]
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Calculadora",
       "short_name": "Calculadora",
       "url": "calculadora.html",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "1024x1024"
-        }
-      ]
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Comparar Ficheiros",
       "short_name": "Comparar",
       "url": "comparar.html",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "1024x1024"
-        }
-      ]
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

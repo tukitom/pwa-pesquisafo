@@ -12,7 +12,6 @@
 <meta name="apple-mobile-web-app-title" content="PesquisaFO">
 <title>Comparar Ficheiros — Pesquisa F.O</title>
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="modern.css">
 </head>
 <body>
 <header>
@@ -24,11 +23,8 @@
     <button class="active" onclick="window.location.href='comparar.html'">🔀 Comparar</button>
   </nav>
 </header>
-<script src="ui.js"></script>
 
-<main id="app">
-<div class="page-heading"><h1>O que mudou na rede?</h1><p>Seleciona dois ficheiros, do mais antigo para o mais recente.</p></div>
-<div class="compare-inputs">
+<div id="app">
 
   <div class="card">
     <p class="card-title">📄 Ficheiro Antigo</p>
@@ -42,8 +38,7 @@
     <div id="statusNovo" class="file-status" aria-live="polite">Nenhum ficheiro carregado</div>
   </div>
 
-</div><p id="compareFeedback" class="inline-feedback" role="status"></p>
-  <button disabled id="btnComparar" class="primary">🔀 Comparar</button>
+  <button id="btnComparar" class="primary">🔀 Comparar</button>
 
   <div id="comparResult" class="result-box" aria-live="polite"></div>
   <div class="result-actions" id="comparResultActions" style="display:none;">
@@ -51,7 +46,7 @@
     <button id="btnPartilharComparar">📤 Partilhar</button>
   </div>
 
-</main>
+</div>
 
 <script src="shared.js"></script>
 <script src="comparar.js" charset="UTF-8"></script>

@@ -30,10 +30,6 @@ const CSV_LOADED_AT_KEY = "fo_csv_loaded_at";
 // agoraFormatado) vivem agora em shared.js — partilhadas com o Comparar.
 
 let csvData = [];
-let nomeCsvAtual = "";
-let importVersion = 0;
-function importFeedback(message) { const el=document.getElementById("importFeedback"); if(el)el.textContent=message; }
-function clearSearchView(){ ultimoResultadoTexto=""; document.getElementById("quick-search").value="";document.getElementById("quick-options").replaceChildren(); const filter=document.getElementById("checkboxSoLivres");if(filter)filter.checked=false; textResult.replaceChildren();resultActions.style.display="none";document.getElementById("filter-empty").hidden=true; document.getElementById("datasetSummary").textContent=csvData.length?`${csvData.length.toLocaleString("pt-PT")} registos · ${idx.byPdo.size} PDOs`:""; }
 
 // ---- Índices construídos ao carregar o CSV (pesquisa rápida mesmo com ficheiros grandes) ----
 let idx = {
@@ -92,14 +88,11 @@ btnLoadCsv.addEventListener("change", event => {
   textFileName.textContent = `📄 A carregar ${file.name}...`;
   textFileName.classList.remove("loaded");
   const reader = new FileReader();
-  const version=++importVersion;
   reader.onload = e => {
-    if(version!==importVersion)return;
     const texto = decodificarTexto(e.target.result);
     carregarCsv(texto, file.name, true);
   };
   reader.onerror = () => {
-    if(version!==importVersion)return;
     textFileName.textContent = "❌ Erro a ler o ficheiro.";
   };
   // Lemos como bytes em bruto (não como texto) para podermos decidir nós
@@ -122,12 +115,8 @@ if (btnForgetCsv) {
       localStorage.removeItem(CSV_FILENAME_KEY);
       localStorage.removeItem(CSV_LOADED_AT_KEY);
     } catch (e) {}
-    importVersion++;
-    nomeCsvAtual="";
     csvData = [];
     construirIndices();
-    clearSearchView();
-    importFeedback("");
     resetSpinners(false);
     textFileName.textContent = "Nenhum ficheiro carregado";
     textFileName.classList.remove("loaded");
@@ -140,22 +129,38 @@ if (btnForgetCsv) {
 function carregarCsv(texto, nomeFicheiro, guardarLocal) {
   const resultado = parseCsvGenerico(texto, requiredCols);
 
-  if(resultado.erro){
-    const reason=resultado.erro==='colunas'?'Faltam colunas obrigatórias: '+resultado.colunasEmFalta.join(', '):resultado.erro==='vazio'?'O ficheiro está vazio.':'Não existem registos válidos.';
-    importFeedback(reason+(nomeCsvAtual?' Continua ativo: '+nomeCsvAtual+'.':''));
+  if (resultado.erro === "vazio") {
+    alert("Ficheiro CSV vazio!");
     return;
   }
-  importFeedback('');
+  if (resultado.erro === "colunas") {
+    alert(
+      `⚠️ Este ficheiro não parece ser um export válido: faltam ${resultado.colunasEmFalta.length} coluna(s) esperada(s):\n\n` +
+      resultado.colunasEmFalta.join(", ") +
+      `\n\nVerifica se carregaste o ficheiro certo.`
+    );
+    textFileName.textContent = "❌ Ficheiro com colunas em falta — não foi carregado.";
+    textFileName.classList.remove("loaded");
+    return;
+  }
+  if (resultado.erro === "semdados") {
+    // Ficheiro só com cabeçalho (ou onde todas as linhas de dados foram
+    // ignoradas por má formação) — mantém os dados anteriores em vez de
+    // apagar uma pesquisa que já estava a funcionar.
+    alert("Este ficheiro não tem nenhuma linha de dados válida (só o cabeçalho, ou todas as linhas estão mal formadas). O ficheiro anterior foi mantido.");
+    textFileName.textContent = "❌ Ficheiro sem dados válidos — não foi carregado.";
+    textFileName.classList.remove("loaded");
+    return;
+  }
+
   const { rows, linhasIgnoradas } = resultado;
   if (linhasIgnoradas > 0) {
     console.warn(`[CSV] ${linhasIgnoradas} linha(s) ignorada(s) por não terem o número de colunas esperado.`);
   }
 
   csvData = rows;
-  nomeCsvAtual = nomeFicheiro;
   construirIndices();
   resetSpinners(false);
-  clearSearchView();
 
   // SRO
   const sros = [...idx.bySro.keys()].sort();
@@ -186,7 +191,7 @@ function carregarCsv(texto, nomeFicheiro, guardarLocal) {
       if (btnForgetCsv) btnForgetCsv.style.display = "inline-block";
     } catch (e) {
       // Ficheiro demasiado grande para guardar localmente — continua a funcionar só nesta sessão
-      importFeedback("Ficheiro disponível apenas nesta sessão: não foi possível guardá-lo neste navegador.");
+      console.warn("Não foi possível guardar o CSV localmente:", e);
     }
   }
   mostrarAvisoIdadeCsv();
@@ -209,7 +214,7 @@ function mostrarAvisoIdadeCsv() {
     const nomesMeses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
     const mesCarregado = nomesMeses[dataCarregado.getMonth()];
     const textoMeses = diffMeses === 1 ? "há 1 mês" : `há ${diffMeses} meses`;
-    csvAgeWarning.textContent = `⚠️ Este ficheiro foi importado em ${mesCarregado} (${textoMeses}) — considera carregar uma versão mais recente.`;
+    csvAgeWarning.textContent = `⚠️ Este ficheiro é de ${mesCarregado} (${textoMeses}) — considera carregar uma versão mais recente.`;
     csvAgeWarning.style.display = "block";
   } else {
     csvAgeWarning.style.display = "none";
@@ -794,7 +799,6 @@ const checkboxSoLivres = document.getElementById("checkboxSoLivres");
 function aplicarFiltroLivres() {
   if (!checkboxSoLivres) return;
   textResult.classList.toggle("filtro-livres", checkboxSoLivres.checked);
-  document.getElementById("filter-empty").hidden=!(checkboxSoLivres.checked && textResult.querySelector(".result-item") && !textResult.querySelector(".result-item .badge-livre"));
 }
 if (checkboxSoLivres) {
   checkboxSoLivres.addEventListener("change", aplicarFiltroLivres);
@@ -927,7 +931,6 @@ const btnLimparTudo = document.getElementById("btnLimparTudo");
 if (btnLimparTudo) {
   btnLimparTudo.addEventListener("click", () => {
     resetSelects();
-    clearSearchView();
     mostrarResultado("", "");
   });
 }
